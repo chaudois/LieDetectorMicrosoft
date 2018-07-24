@@ -80,11 +80,7 @@ namespace LieDetector
                 }
                 reader.Close();
 
-            }
-            if(BoutonImages.InvokeRequired())
-            {
-
-            }
+            } 
             //BoutonImages.IsEnabled = true;
             //BoutonVideo.Content = "Video...";
 
