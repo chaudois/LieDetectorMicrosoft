@@ -74,27 +74,28 @@ namespace LieDetector
             if (!Directory.Exists(execDirecory + "\\resultat\\fragmentation\\" + fileName))
             {
 
-            Directory.CreateDirectory("resultat\\fragmentation\\" + fileName);
-            int frame = 0;
-            while (videoFrame != null && !ct.IsCancellationRequested)
-            {
-                Console.WriteLine("\ncoucou 3 \n");
-                videoFrame.Save(execDirecory + "\\resultat\\fragmentation\\" + fileName + "\\" + frame + ".bmp");
-                videoFrame.Dispose();
-                videoFrame = reader.ReadVideoFrame();
-                frame++;
+                Directory.CreateDirectory("resultat\\fragmentation\\" + fileName);
+                int frame = 0;
+                while (videoFrame != null && !ct.IsCancellationRequested)
+                {
+                    Console.WriteLine("\ncoucou 3 \n");
+                    videoFrame.Save(execDirecory + "\\resultat\\fragmentation\\" + fileName + "\\" + frame + ".bmp");
+                    videoFrame.Dispose();
+                    videoFrame = reader.ReadVideoFrame();
+                    frame++;
+                }
+                tokenSource2.Dispose();
+                reader.Close();
+                Action act = () =>
+               {
+                   BoutonVideo.Content = "Video...";
+               };
+                BoutonVideo.Dispatcher.Invoke(() => { BoutonVideo.Content = "Video..."; });
+                BoutonImages.Dispatcher.Invoke(() => { BoutonImages.IsEnabled = true; });
+
             }
-            tokenSource2.Dispose();
-            reader.Close();
-            Action act = () =>
-           {
-               BoutonVideo.Content = "Video...";
-           };
-            BoutonVideo.Dispatcher.Invoke(()=> {BoutonVideo.Content = "Video...";});
-            BoutonImages.Dispatcher.Invoke(()=> { BoutonImages.IsEnabled =true;});
- 
         }
- 
+
         private void ButtonImage_Click(object sender, RoutedEventArgs e)
         {
 
