@@ -71,9 +71,8 @@ namespace LieDetector
             VideoFileReader reader = new VideoFileReader();
             reader.Open(FileName);
             Bitmap videoFrame = reader.ReadVideoFrame();
-            //if (!Directory.Exists(execDirecory + "\\resultat\\fragmentation\\" + fileName))
-            //{
-            Console.WriteLine("\ncoucou 2 \n");
+            if (!Directory.Exists(execDirecory + "\\resultat\\fragmentation\\" + fileName))
+            {
 
             Directory.CreateDirectory("resultat\\fragmentation\\" + fileName);
             int frame = 0;
