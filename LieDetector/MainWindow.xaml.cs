@@ -18,6 +18,7 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.Reflection;
 
 namespace LieDetector
 {
@@ -27,19 +28,21 @@ namespace LieDetector
         string fileName = null;
         string execPath = null;
         string execDirecory = null;
-        CancellationTokenSource tokenSource2 = null;
+        CancellationTokenSource tokenSource2;
         CancellationToken ct;
         public MainWindow()
         {
-            tokenSource2 = new CancellationTokenSource();
-            ct = tokenSource2.Token;
-            ;
+
             execPath = System.Reflection.Assembly.GetEntryAssembly().Location;
             execDirecory = execPath.Remove(execPath.LastIndexOf('\\'));
             InitializeComponent();
         }
         private void ButtonVideo_Click(object sender, RoutedEventArgs e)
         {
+            tokenSource2 = new CancellationTokenSource();
+
+            ct = tokenSource2.Token;
+
             if ((string)BoutonVideo.Content == "Video...")
             {
 
@@ -49,11 +52,12 @@ namespace LieDetector
                 fileName = openFileDialog.FileName.Split('\\').ToList().Last().Split('.')[0];
                 if (fileName != "")
                 {
-                    Task.Run(() => fragmentVideo(openFileDialog.FileName)); 
+                    Task.Run(() => fragmentVideo(openFileDialog.FileName));
                 }
             }
             else
             {
+
                 tokenSource2.Cancel();
                 BoutonVideo.Content = "Video...";
 
@@ -63,32 +67,35 @@ namespace LieDetector
         }
         private void fragmentVideo(string FileName)
         {
+            Console.WriteLine("\ncoucou 1 \n");
             VideoFileReader reader = new VideoFileReader();
             reader.Open(FileName);
             Bitmap videoFrame = reader.ReadVideoFrame();
-            if (!Directory.Exists(execDirecory + "\\resultat\\fragmentation\\" + fileName))
+            //if (!Directory.Exists(execDirecory + "\\resultat\\fragmentation\\" + fileName))
+            //{
+            Console.WriteLine("\ncoucou 2 \n");
+
+            Directory.CreateDirectory("resultat\\fragmentation\\" + fileName);
+            int frame = 0;
+            while (videoFrame != null && !ct.IsCancellationRequested)
             {
-
-                Directory.CreateDirectory("resultat\\fragmentation\\" + fileName);
-                int frame = 0;
-                while (videoFrame != null && !ct.IsCancellationRequested)
-                {
-                    videoFrame.Save(execDirecory + "\\resultat\\fragmentation\\" + fileName + "\\" + frame + ".bmp");
-                    videoFrame.Dispose();
-                    videoFrame = reader.ReadVideoFrame();
-                    frame++;
-                }
-                reader.Close();
-
+                Console.WriteLine("\ncoucou 3 \n");
+                videoFrame.Save(execDirecory + "\\resultat\\fragmentation\\" + fileName + "\\" + frame + ".bmp");
+                videoFrame.Dispose();
+                videoFrame = reader.ReadVideoFrame();
+                frame++;
             }
-            if(BoutonImages.InvokeRequired())
-            {
-
-            }
-            //BoutonImages.IsEnabled = true;
-            //BoutonVideo.Content = "Video...";
-
+            tokenSource2.Dispose();
+            reader.Close();
+            Action act = () =>
+           {
+               BoutonVideo.Content = "Video...";
+           };
+            BoutonVideo.Dispatcher.Invoke(()=> {BoutonVideo.Content = "Video...";});
+            BoutonImages.Dispatcher.Invoke(()=> { BoutonImages.IsEnabled =true;});
+ 
         }
+ 
         private void ButtonImage_Click(object sender, RoutedEventArgs e)
         {
 
