@@ -8,10 +8,27 @@
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <Button x:Name="BoutonVideo" Content="Video..." HorizontalAlignment="Left" Margin="53,18,0,0" VerticalAlignment="Top" Width="75" Click="ButtonVideo_Click"/>
-        <Image HorizontalAlignment="Left" Height="100" Margin="186,10,0,0" VerticalAlignment="Top" Width="100"/>
         <Image HorizontalAlignment="Left" Height="38" Margin="10,10,0,0" VerticalAlignment="Top" Width="37" RenderTransformOrigin="0.117,-1.808" Source="Images/video-clip-icone.png"/>
-        <Button x:Name="BoutonImages" Content="Images..." HorizontalAlignment="Left" Margin="53,67,0,0" VerticalAlignment="Top" Width="75" Click="ButtonImage_Click" IsEnabled="False"/>
-        <Image HorizontalAlignment="Left" Height="38" Margin="10,59,0,0" VerticalAlignment="Top" Width="37" RenderTransformOrigin="0.117,-1.808" Source="Images/files-icon.png"/>
+        <Button x:Name="BoutonImages" Content="Images" HorizontalAlignment="Left" Margin="53,67,0,0" VerticalAlignment="Top" Width="75" Click="ButtonImage_Click" IsEnabled="False"/>
+        <Image HorizontalAlignment="Left" Height="38" Margin="10,60,0,0" VerticalAlignment="Top" Width="37" RenderTransformOrigin="0.117,-1.808" Source="Images/files-icon.png"/>
+        <ProgressBar x:Name="progressFractionnage" HorizontalAlignment="Left" Height="19" Margin="153,67,0,0" VerticalAlignment="Top" Width="100" SmallChange="1"/>
+        <Button  x:Name="BoutonCancelFractionnage"   HorizontalAlignment="Left" Margin="258,67,0,0" VerticalAlignment="Top" Width="19" Height="19" Click="ButtonCancel_Click" IsEnabled="False">
+            <Image Source="Images/cancel.png" IsEnabled="False" />
+
+        </Button>
+        <Image HorizontalAlignment="Left" Height="38" Margin="10,114,0,0" VerticalAlignment="Top" Width="37" RenderTransformOrigin="0.117,-1.808" Source="Images/face.png"/>
+        <Button x:Name="BoutonFaces" Content="Visages" HorizontalAlignment="Left" Margin="53,121,0,0" VerticalAlignment="Top" Width="75" Click="ButtonImage_Click" IsEnabled="False"/>
+        <ProgressBar x:Name="progressFaceReco" HorizontalAlignment="Left" Height="19" Margin="153,121,0,0" VerticalAlignment="Top" Width="100" SmallChange="1"/>
+        <Button  x:Name="BoutonCancelFaceReco"   HorizontalAlignment="Left" Margin="258,121,0,0" VerticalAlignment="Top" Width="19" Height="19" Click="ButtonCancel_Click" IsEnabled="False">
+            <Image Source="Images/cancel.png" IsEnabled="False" />
+        </Button>
+        <Button x:Name="BoutonDeleteResultFractionnage"   HorizontalAlignment="Left" Margin="282,67,0,0" VerticalAlignment="Top" Width="21" Click="ButtonRemoveImages_Click" IsEnabled="False">
+            <Image Source="Images/trash.png"   />
+        </Button>
+        <Button x:Name="BoutonDeleteResultFractionnage_Copy"  HorizontalAlignment="Left" Margin="282,121,0,0" VerticalAlignment="Top" Width="21" Click="ButtonRemoveImages_Click" IsEnabled="False">
+            <Image Source="Images/trash.png"   />
+        </Button>
+
 
     </Grid>
 </Window>

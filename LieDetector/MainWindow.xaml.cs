@@ -33,75 +33,112 @@ namespace LieDetector
         public MainWindow()
         {
 
-            execPath = System.Reflection.Assembly.GetEntryAssembly().Location;
+            execPath = Assembly.GetEntryAssembly().Location;
             execDirecory = execPath.Remove(execPath.LastIndexOf('\\'));
             InitializeComponent();
         }
         private void ButtonVideo_Click(object sender, RoutedEventArgs e)
         {
-            tokenSource2 = new CancellationTokenSource();
+            //récuperation du fichier video
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.ShowDialog();
+            fileName = openFileDialog.FileName.Split('\\').ToList().Last().Split('.')[0];
 
-            ct = tokenSource2.Token;
 
-            if ((string)BoutonVideo.Content == "Video...")
+            if (fileName != "")
             {
+                progressFractionnage.Foreground = System.Windows.Media.Brushes.Green;
 
-                BoutonVideo.Content = "Cancel";
-                OpenFileDialog openFileDialog = new OpenFileDialog();
-                openFileDialog.ShowDialog();
-                fileName = openFileDialog.FileName.Split('\\').ToList().Last().Split('.')[0];
-                if (fileName != "")
-                {
-                    Task.Run(() => fragmentVideo(openFileDialog.FileName));
-                }
+                //lancement du thread d'extraction des images et de découpage des visages
+                tokenSource2 = new CancellationTokenSource();
+                ct = tokenSource2.Token;
+                BoutonVideo.IsEnabled = false;
+                BoutonImages.IsEnabled = false;
+                Task.Run(() => fragmentVideo(openFileDialog.FileName));
             }
-            else
-            {
-
-                tokenSource2.Cancel();
-                BoutonVideo.Content = "Video...";
-
-            }
-
 
         }
         private void fragmentVideo(string FileName)
         {
-            Console.WriteLine("\ncoucou 1 \n");
+            //ouverture du flux d'image depuis l'emplacement du fichier video
             VideoFileReader reader = new VideoFileReader();
             reader.Open(FileName);
+            long frameCount = reader.FrameCount;
             Bitmap videoFrame = reader.ReadVideoFrame();
+            progressFractionnage.Dispatcher.Invoke(() => { progressFractionnage.Maximum = frameCount; });
+            BoutonCancelFractionnage.Dispatcher.Invoke(() => { BoutonCancelFractionnage.IsEnabled = true; });
+
+            //si un dossier avec le nom du fichier à extraire éxiste déja, ne fait rien,
+            //se comporte comme si toutes les images avait été extraites
             if (!Directory.Exists(execDirecory + "\\resultat\\fragmentation\\" + fileName))
             {
 
                 Directory.CreateDirectory("resultat\\fragmentation\\" + fileName);
+
+
                 int frame = 0;
+
+                //creer une image par frame de la vidéo, et la stock dans un dossier du nom du fichier
                 while (videoFrame != null && !ct.IsCancellationRequested)
                 {
-                    Console.WriteLine("\ncoucou 3 \n");
+
+                    progressFractionnage.Dispatcher.Invoke(() => { progressFractionnage.Value = frame; });//met à jour la progressBar
+
                     videoFrame.Save(execDirecory + "\\resultat\\fragmentation\\" + fileName + "\\" + frame + ".bmp");
                     videoFrame.Dispose();
                     videoFrame = reader.ReadVideoFrame();
                     frame++;
                 }
-                tokenSource2.Dispose();
-                reader.Close();
-                Action act = () =>
-               {
-                   BoutonVideo.Content = "Video...";
-               };
-                BoutonVideo.Dispatcher.Invoke(() => { BoutonVideo.Content = "Video..."; });
-                BoutonImages.Dispatcher.Invoke(() => { BoutonImages.IsEnabled = true; });
 
             }
+            else
+            {
+                progressFractionnage.Dispatcher.Invoke(() => { progressFractionnage.Value = frameCount; });
+            }
+
+            if (!ct.IsCancellationRequested)
+            {
+                CropFaces(FileName);
+            }
+            else
+            {
+                progressFractionnage.Dispatcher.Invoke(() => { progressFractionnage.Foreground = System.Windows.Media.Brushes.Red; });
+                BoutonVideo.Dispatcher.Invoke(() => {BoutonVideo.IsEnabled = true;});
+            }
+            //fermeture du token d'interuption et du flux video
+            tokenSource2.Dispose();
+            reader.Close();
+
+            BoutonImages.Dispatcher.Invoke(() => { BoutonImages.IsEnabled = true; });
+
+        }
+        private void CropFaces(string fileName)
+        {
+            throw new NotImplementedException();
         }
 
         private void ButtonImage_Click(object sender, RoutedEventArgs e)
         {
-
-            Process.Start(execDirecory + "/resultat/fragmentation/" + fileName);
-
+            if (Directory.Exists(execDirecory + "/resultat/fragmentation/" + fileName))
+                Process.Start(execDirecory + "/resultat/fragmentation/" + fileName);
         }
 
+        private void ButtonCancel_Click(object sender, RoutedEventArgs e)
+        {
+            tokenSource2.Cancel();
+            BoutonCancelFractionnage.IsEnabled = false;
+            BoutonDeleteResultFractionnage.IsEnabled = true;
+        }
+        
+        private void ButtonRemoveImages_Click(object sender, RoutedEventArgs e)
+        {
+            if(Directory.Exists(execDirecory + "/resultat/fragmentation/" + fileName))
+            {
+                Directory.Delete(execDirecory + "/resultat/fragmentation/" + fileName,true);
+                BoutonDeleteResultFractionnage.IsEnabled = false;
+                BoutonImages.IsEnabled = false;
+                progressFractionnage.Value = 0;
+            }
+        }
     }
 }
