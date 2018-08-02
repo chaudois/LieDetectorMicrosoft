@@ -10,5 +10,6 @@ namespace BLL.Interfaces
     {
         void Notify(string message);
         string getMessage();
+        int getNotificationCount();
     }
 }

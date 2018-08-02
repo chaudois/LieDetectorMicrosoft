@@ -25,38 +25,46 @@ namespace LieDetector
     {
 
         IVideoExtractor videoExtractor;
+        System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+        int nbImage;
+        IObserver observerExtration, observerFaceReco;
+        string LastPictureAnalysed;
         public MainWindow()
         {
+            LastPictureAnalysed = "";
+            var unity = UnityConfig.Setup();
+            videoExtractor = unity.Resolve<IVideoExtractor>();
             Thread.CurrentThread.Name = "Main";
-
+            timer.Tick += tick;
+            observerExtration = new GenericObserver();
+            observerFaceReco = new GenericObserver();
+            videoExtractor.AddObserverToExtractor(ref observerExtration);
+            videoExtractor.AddObserverToFaceReco(ref observerFaceReco);
             InitializeComponent();
         }
         private void tick(object sender, EventArgs e)
         {
-            //if (imageSourceUrl != null && imageSourceUrl != "" && imageSourceUrl != pictureBox1.Source?.ToString().Replace("file:///", ""))
-            //{
+            BoutonVideo.IsEnabled = videoExtractor.IsFinished();
 
-            //    System.Windows.Media.Imaging.BitmapImage bmp = new System.Windows.Media.Imaging.BitmapImage();
-            //    bmp.BeginInit();
-            //    bmp.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-            //    bmp.UriSource = new Uri(imageSourceUrl);
-            //    bmp.EndInit();
+            nbImage = int.Parse(observerExtration.getMessage().Split('/')[1]);
+            progressFractionnage.Maximum = nbImage;
+            progressFractionnage.Value = observerExtration.getNotificationCount();
+            progressFaceReco.Maximum = nbImage;
+            progressFaceReco.Value = observerFaceReco.getNotificationCount();
+            avancementFragmentation.Content = observerExtration.getMessage();
+            avancementFaceReco.Content = observerFaceReco.getNotificationCount()+"/"+nbImage;
 
-            //    pictureBox1.Source = bmp;
-            //}
+
+
         }
         private void ButtonVideo_Click(object sender, RoutedEventArgs e)
         {
-            var unity = UnityConfig.Setup();
-            videoExtractor = unity.Resolve<IVideoExtractor>();
             //OpenFileDialog openFileDialog = new OpenFileDialog();
             //openFileDialog.ShowDialog();
             string execPath = Assembly.GetEntryAssembly().Location;
-
             string execDirecory = execPath.Remove(execPath.LastIndexOf('\\'));
-
             Task.Run(() => videoExtractor.Extract(@"C:\Users\d.chaudois\Videos\video1.mp4", execDirecory));
-            BoutonVideo.IsEnabled = false;
+            timer.Start();
 
 
         }

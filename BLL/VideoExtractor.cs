@@ -12,13 +12,18 @@ namespace BLL
 {
     public class VideoExtractor : IVideoExtractor
     {
-        bool stop, pause;
-        List<IProgress<string>> middleWares;
+        bool stop, pause, finished;
+        List<IObserver> middleWares;
+        long frameCut, frameCount, PictureAnalysed, FaceFounded;
         IVideoConverter _videoConverter;
+        public bool IsFinished()
+        {
+            return finished;
+        }
         public VideoExtractor(IVideoConverter videoConverter)
         {
             this._videoConverter = videoConverter;
-            middleWares = new List<IProgress<string>>();
+            middleWares = new List<IObserver>();
 
         }
         public void Stop()
@@ -29,26 +34,28 @@ namespace BLL
         {
             pause = !pause;
         }
-
-        public void addNotification(IProgress<string> middleWare)
+        public void AddObserverToExtractor(ref IObserver middleWare)
         {
             middleWares.Add(middleWare);
-            _videoConverter.addMiddleWare(middleWare);
         }
-        public void Extract(string videoLocation,string execDirectory)
+        public void AddObserverToFaceReco(ref IObserver middleWare)
+        {
+            _videoConverter.addObserver(ref middleWare);
+        }
+        public void Extract(string videoLocation, string execDirectory)
         {
             VideoFileReader reader = new VideoFileReader();
 
-
+            PictureAnalysed = FaceFounded = 0;
             reader.Open(videoLocation);
-            long frameCount = reader.FrameCount;
+            frameCount = reader.FrameCount;
             Bitmap videoFrame = reader.ReadVideoFrame();
             string fileName = videoLocation.Split('\\').ToList().Last().Split('.')[0];
-            Directory.CreateDirectory(execDirectory+"\\resultat\\fragmentation\\" + fileName);
+            Directory.CreateDirectory(execDirectory + "\\resultat\\fragmentation\\" + fileName);
             Thread.CurrentThread.Name = "Extract_" + fileName;
 
 
-            int frame = 0;
+            frameCut = 0;
             //creer une image par frame de la vidéo, et la stock dans un dossier du nom du fichier video
             while (videoFrame != null && !stop)
             {
@@ -56,12 +63,12 @@ namespace BLL
                 {
 
                 }
-                string pathPicture = execDirectory+ "\\resultat\\fragmentation\\" + fileName + "\\" + frame + ".bmp";
+                string pathPicture = execDirectory + "\\resultat\\fragmentation\\" + fileName + "\\" + frameCut + ".bmp";
 
                 //si la frame exist déja, ne la remplace pas, skip le traitement
                 if (!File.Exists(pathPicture))
                 {
- 
+
                     videoFrame.Save(pathPicture);
 
                 }
@@ -71,18 +78,19 @@ namespace BLL
                 {
                     foreach (var middleWare in middleWares)
                     {
-                        middleWare.Report(frame.ToString() + "/" + frameCount + "/" + pathPicture);
+                        middleWare.Notify(frameCut.ToString() + "/" + frameCount);
                     }
                 }
                 videoFrame.Dispose();
-                videoFrame=null;
-                Task.Run(()=>_videoConverter.ProcessPicture(pathPicture,execDirectory));
+                videoFrame = null;
+                Task.Run(() => _videoConverter.ProcessPicture(pathPicture, execDirectory));
                 videoFrame = reader.ReadVideoFrame();
-                frame++;
+                frameCut++;
             }
-
+            finished = true;
             //fermeture du flux video
             reader.Close();
         }
+
     }
 }

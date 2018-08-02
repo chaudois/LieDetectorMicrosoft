@@ -8,6 +8,10 @@ namespace BLL.Interfaces
 {
     public interface IVideoExtractor
     {
-        void Extract(string videos,string execDirectory);
+        void Extract(string videos, string execDirectory);
+        bool IsFinished();
+        void AddObserverToExtractor(ref IObserver middleWare);
+        void AddObserverToFaceReco(ref IObserver middleWare);
+        void Pause();
     }
 }

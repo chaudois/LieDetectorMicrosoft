@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BLL.Interfaces;
-using BLL.Models;
 using Emgu.CV;
 using Emgu.CV.Structure;
 
@@ -15,12 +14,11 @@ namespace BLL
 {
     public class VideoConverter : IVideoConverter
     {
-        private bool pause;
-        private List<IProgress<string>> middleWares;
+        private List<IObserver> middleWares;
         const string XML_LOCATION = @"D:\sourcesexpaceo\git\LieDetector\LieDetector\Ressources\xml\haarcascade_frontalface_alt_tree.xml";
         public VideoConverter()
         {
-            middleWares = new List<IProgress<string>>();
+            middleWares = new List<IObserver>();
         }
 
         public void ProcessPicture(string pathPicture, string execDirectory)
@@ -32,10 +30,6 @@ namespace BLL
                 string fileName = pathPicture.Split('\\').ToList().Last();
                 // Thread.CurrentThread.Name = "ProcessPicture_" + VideoName+"_"+fileName;
                 Directory.CreateDirectory(execDirectory + "\\resultat\\visages\\" + VideoName);
-
-                while (pause)
-                {
-                }
                 Bitmap masterImage = new Bitmap(pathPicture);
 
                 Image<Gray, Byte> normalizedMasterImage = new Image<Gray, Byte>(masterImage);
@@ -66,12 +60,15 @@ namespace BLL
 
                             target.Save(execDirectory + "\\resultat\\visages\\" + VideoName + "\\" + fileName);
                             target.Dispose();
+                            //si on as trouver des visages, le notifie aux observeurs avec le path de sauvegarde
+
                         }
                         catch (Exception e)
                         {
                             Console.WriteLine(e.Message);
                         }
 
+ 
                     }
                 }
                 catch (Exception e)
@@ -82,18 +79,15 @@ namespace BLL
                 masterImage.Dispose();
                 foreach (var middleWare in middleWares)
                 {
-                    middleWare.Report(execDirectory + "\\resultat\\visages\\" + VideoName + "\\" + fileName);
+                    middleWare.Notify(execDirectory + "\\resultat\\visages\\" + VideoName + "\\" + fileName );
                 }
+
             }
         }
-        public void Pause()
-        {
-            pause = !pause;
-        }
-        public void addMiddleWare(IProgress<string> middleWare)
+
+        public void addObserver(ref IObserver middleWare)
         {
             middleWares.Add(middleWare);
         }
-
     }
 }
