@@ -8,6 +8,6 @@ namespace BLL.Interfaces
 {
     public interface IVideoExtractor
     {
-        void Extract(string videos);
+        void Extract(string videos,string execDirectory);
     }
 }

@@ -35,7 +35,7 @@ namespace BLL
             middleWares.Add(middleWare);
             _videoConverter.addMiddleWare(middleWare);
         }
-        public void Extract(string videoLocation)
+        public void Extract(string videoLocation,string execDirectory)
         {
             VideoFileReader reader = new VideoFileReader();
 
@@ -44,7 +44,7 @@ namespace BLL
             long frameCount = reader.FrameCount;
             Bitmap videoFrame = reader.ReadVideoFrame();
             string fileName = videoLocation.Split('\\').ToList().Last().Split('.')[0];
-            Directory.CreateDirectory("resultat\\fragmentation\\" + fileName);
+            Directory.CreateDirectory(execDirectory+"\\resultat\\fragmentation\\" + fileName);
             Thread.CurrentThread.Name = "Extract_" + fileName;
 
 
@@ -56,7 +56,7 @@ namespace BLL
                 {
 
                 }
-                string pathPicture = "resultat\\fragmentation\\" + fileName + "\\" + frame + ".bmp";
+                string pathPicture = execDirectory+ "\\resultat\\fragmentation\\" + fileName + "\\" + frame + ".bmp";
 
                 //si la frame exist déja, ne la remplace pas, skip le traitement
                 if (!File.Exists(pathPicture))
@@ -76,7 +76,7 @@ namespace BLL
                 }
                 videoFrame.Dispose();
                 videoFrame=null;
-                _videoConverter.ProcessPicture(pathPicture);
+                Task.Run(()=>_videoConverter.ProcessPicture(pathPicture,execDirectory));
                 videoFrame = reader.ReadVideoFrame();
                 frame++;
             }

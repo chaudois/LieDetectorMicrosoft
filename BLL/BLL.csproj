@@ -87,6 +87,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interfaces\IObserver.cs" />
     <Compile Include="Interfaces\IVideoConverter.cs" />
     <Compile Include="Interfaces\IVideoExtractor.cs" />
     <Compile Include="Models\ProgressModel.cs" />

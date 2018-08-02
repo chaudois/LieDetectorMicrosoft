@@ -51,7 +51,11 @@ namespace LieDetector
             videoExtractor = unity.Resolve<IVideoExtractor>();
             //OpenFileDialog openFileDialog = new OpenFileDialog();
             //openFileDialog.ShowDialog();
-            Task.Run(() => videoExtractor.Extract(@"C:\Users\d.chaudois\Videos\video1.mp4"));
+            string execPath = Assembly.GetEntryAssembly().Location;
+
+            string execDirecory = execPath.Remove(execPath.LastIndexOf('\\'));
+
+            Task.Run(() => videoExtractor.Extract(@"C:\Users\d.chaudois\Videos\video1.mp4", execDirecory));
             BoutonVideo.IsEnabled = false;
 
 
