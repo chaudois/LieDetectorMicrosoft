@@ -28,10 +28,9 @@ namespace LieDetector
         System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
         int nbImage;
         IObserver observerExtration, observerFaceReco;
-        string LastPictureAnalysed;
+        string fileName;
         public MainWindow()
         {
-            LastPictureAnalysed = "";
             var unity = UnityConfig.Setup();
             videoExtractor = unity.Resolve<IVideoExtractor>();
             Thread.CurrentThread.Name = "Main";
@@ -45,15 +44,23 @@ namespace LieDetector
         private void tick(object sender, EventArgs e)
         {
             BoutonVideo.IsEnabled = videoExtractor.IsFinished();
+            try
+            {
 
-            nbImage = int.Parse(observerExtration.getMessage().Split('/')[1]);
-            progressFractionnage.Maximum = nbImage;
-            progressFractionnage.Value = observerExtration.getNotificationCount();
-            progressFaceReco.Maximum = nbImage;
-            progressFaceReco.Value = observerFaceReco.getNotificationCount();
-            avancementFragmentation.Content = observerExtration.getMessage();
-            avancementFaceReco.Content = observerFaceReco.getNotificationCount()+"/"+nbImage;
+                nbImage = int.Parse(observerExtration.getMessage().Split('/')[1]);
+                progressFractionnage.Maximum = nbImage;
+                progressFractionnage.Value = observerExtration.getNotificationCount();
+                progressFaceReco.Maximum = nbImage;
+                progressFaceReco.Value = observerFaceReco.getNotificationCount();
+                avancementFragmentation.Content = observerExtration.getMessage();
+                avancementFaceReco.Content = observerFaceReco.getNotificationCount() + "/" + nbImage;
 
+            }
+            catch (Exception)
+            {
+
+
+            }
 
 
         }
@@ -61,17 +68,17 @@ namespace LieDetector
         {
             //OpenFileDialog openFileDialog = new OpenFileDialog();
             //openFileDialog.ShowDialog();
-            string execPath = Assembly.GetEntryAssembly().Location;
-            string execDirecory = execPath.Remove(execPath.LastIndexOf('\\'));
-            Task.Run(() => videoExtractor.Extract(@"C:\Users\d.chaudois\Videos\video1.mp4", execDirecory));
+
+            BoutonOpenImages.IsEnabled = true;
+            fileName=videoExtractor.ExtractAllVideo()[0];
             timer.Start();
 
 
         }
         private void ButtonDisaplayFragmentation_Click(object sender, RoutedEventArgs e)
         {
-            //if (Directory.Exists(execDirecory + " / resultat/fragmentation/" + fileName))
-            //    Process.Start(execDirecory + "/resultat/fragmentation/" + fileName);
+            if (Directory.Exists("  resultat/fragmentation/" + fileName))
+                Process.Start("resultat/fragmentation/" + fileName);
         }
         private void ButtonDisplayImageFaceReco_Click(object sender, RoutedEventArgs e)
         {

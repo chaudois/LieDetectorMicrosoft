@@ -8,7 +8,9 @@ namespace BLL.Interfaces
 {
     public interface IVideoConverter
     {
-        void ProcessPicture(string pathPicture,string execDirectory);
+        void AddPicture(string pathPicture);
+        void ExtractionIsOver();
         void addObserver(ref IObserver middleWare);
+        void FaceReco(string execDirectory);
     }
 }
