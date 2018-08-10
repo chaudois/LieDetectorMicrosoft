@@ -17,20 +17,24 @@ namespace BLL
         private List<IObserver> middleWares;
         const string XML_LOCATION = @"D:\sourcesexpaceo\git\LieDetector\LieDetector\Ressources\xml\haarcascade_frontalface_alt_tree.xml";
         Stack<string> pictureStack;
-        bool isRunning,pause,stop;
-        /// <summary>
-        /// notify that the extraction is over and now the process can stop after the stack of picture is empty
-        /// </summary>
+        bool pause,stop;
+        int isRunning;
         public FaceRecognizer()
         {
             pictureStack = new Stack<string>();
             middleWares = new List<IObserver>();
-            isRunning = false;
+            isRunning = 0;
         }
+        /// <summary>
+        /// pause all Tasks
+        /// </summary>
         public void Pause()
         {
             pause = !pause;
         }
+        /// <summary>
+        /// finish all task, reset all properties
+        /// </summary>
         public void Stop()
         {
             stop = true;
@@ -47,18 +51,18 @@ namespace BLL
 
         public void FaceRecoAsync(string filePath, string saveDirectory)
         {
-            if (isRunning)
+            if (isRunning>6)
             {
                 pictureStack.Push(filePath);
             }
             else
             {
                 stop = false;
+                isRunning++;
                 pictureStack.Push(filePath);
                 Task.Run(() =>
                 {
                     //Thread.CurrentThread.Name = "FaceReco_" + filePath.Split('\\').ToList().Last();
-                    isRunning = true;
                     string VideoName = "";
                     while (pictureStack.Count() > 0 && !stop)
                     {
@@ -73,7 +77,7 @@ namespace BLL
                             if (VideoName == "")
                             {
                                 VideoName = pathPicture.Split('\\').ToList()[pathPicture.Split('\\').ToList().Count() - 2];
-                                Thread.CurrentThread.Name = "ProcessPicture_" + VideoName + "_" + fileName;
+                                Thread.CurrentThread.Name = "ProcessPicture_" + VideoName + "_" + isRunning;
                                 Directory.CreateDirectory(saveDirectory + "\\resultat\\visages\\" + VideoName);
                             }
                             using (Bitmap masterImage = new Bitmap(pathPicture))
@@ -131,7 +135,7 @@ namespace BLL
                             }
                         }
                     }
-                    isRunning = false;
+                isRunning--;
                 });
 
             }
