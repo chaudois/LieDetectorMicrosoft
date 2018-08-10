@@ -15,12 +15,12 @@ namespace BLL
             notificationCount = 0;
             message = "";
         }
-        public string getMessage()
+        public string GetMessage()
         {
             return message;
         }
 
-        public int getNotificationCount()
+        public int GetNotificationCount()
         {
             return notificationCount;
         }
@@ -30,6 +30,12 @@ namespace BLL
             notificationCount++;
             this.message = message;
         }
+
+        public void Reset()
+        {
+            notificationCount = 0;
+        }
+
     }
 }
 

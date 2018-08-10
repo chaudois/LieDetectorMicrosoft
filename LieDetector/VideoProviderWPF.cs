@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Accord.Video.FFMPEG;
 using BLL.Interfaces;
-namespace BLL
+namespace LieDetector
 {
     public class VideoProviderWPF : IVideoProvider
     {

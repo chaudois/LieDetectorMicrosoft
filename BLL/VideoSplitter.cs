@@ -11,35 +11,39 @@ using Accord.Video.FFMPEG;
 using BLL.Interfaces;
 namespace BLL
 {
-    public class VideoExtractor : IVideoExtractor
+    public class VideoSplitter : IVideoSplitter
     {
         bool stop, pause, finished;
         List<IObserver> middleWares;
         long   frameCount, PictureAnalysed, FaceFound;
-        IVideoConverter _videoConverter;
+        IFaceRecognizer _faceRecognizer;
         IVideoProvider _videoProvider;
-        Stack<string> TaskStack;
-        int taskRunning = 0;
         public bool IsFinished()
         {
             return finished;
         }
-        public VideoExtractor(IVideoConverter videoConverter, IVideoProvider videoProvider)
+        public VideoSplitter(IFaceRecognizer faceRecognizer, IVideoProvider videoProvider)
         {
 
-            TaskStack = new Stack<string>();
             _videoProvider = videoProvider;
-            _videoConverter = videoConverter;
+            _faceRecognizer = faceRecognizer;
             middleWares = new List<IObserver>();
 
         }
         public void Stop()
         {
             stop = true;
+            
+            _faceRecognizer.Stop();
+            foreach (var item in middleWares)
+            {
+                item.Reset();
+            }
         }
         public void Pause()
         {
             pause = !pause;
+            _faceRecognizer.Pause();
         }
         public void AddObserverToExtractor(ref IObserver middleWare)
         {
@@ -47,14 +51,15 @@ namespace BLL
         }
         public void AddObserverToFaceReco(ref IObserver middleWare)
         {
-            _videoConverter.addObserver(ref middleWare);
+            _faceRecognizer.addObserver(ref middleWare);
         }
-        public void Extract(string videoLocation, string execDirectory)
+        public void Split(string videoLocation, string execDirectory)
         {
+            stop = false;
+            finished = false;
             string fileName = videoLocation.Split('\\').ToList().Last().Split('.')[0];
             Directory.CreateDirectory(execDirectory + "\\resultat\\fragmentation\\" + fileName);
             Thread.CurrentThread.Name = "Extract_" + fileName;
-            _videoConverter.FaceReco(execDirectory);
             using (VideoFileReader reader = new VideoFileReader())
             {
 
@@ -93,26 +98,23 @@ namespace BLL
                             }
                         }
                         videoFrame.Dispose();
-                         _videoConverter.AddPicture(pathPicture);
+                         _faceRecognizer.FaceRecoAsync(pathPicture,execDirectory);
 
                     }
 
                 }
-                _videoConverter.ExtractionIsOver();
                 finished = true;
 
             }
 
         }
-        public List<string> ExtractAllVideo()
+        public List<string> SplitAndFaceRecoAllVideo()
         {
             string execDirecory = Assembly.GetEntryAssembly().Location.Remove(Assembly.GetEntryAssembly().Location.LastIndexOf('\\'));
             List<string> files = _videoProvider.GetFiles();
             foreach (string file in files)
             {
-
-
-                Task.Run(() => Extract(file, execDirecory));
+                Task.Run(() => Split(file, execDirecory));
             }
             return files;
         }

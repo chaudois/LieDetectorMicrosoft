@@ -87,15 +87,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FaceRecognizer.cs" />
     <Compile Include="GenericObserver.cs" />
     <Compile Include="Interfaces\IObserver.cs" />
-    <Compile Include="Interfaces\IVideoConverter.cs" />
-    <Compile Include="Interfaces\IVideoExtractor.cs" />
+    <Compile Include="Interfaces\IFaceRecognizer.cs" />
+    <Compile Include="Interfaces\IVideoSplitter.cs" />
     <Compile Include="Interfaces\IVideoProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VideoConverter.cs" />
-    <Compile Include="VideoExtractor.cs" />
-    <Compile Include="VideoProviderWPF.cs" />
+    <Compile Include="VideoSplitter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

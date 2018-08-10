@@ -15,8 +15,8 @@ namespace LieDetector
         {
 
             var result = new UnityContainer();
-            result.RegisterType<IVideoConverter, VideoConverter>();
-            result.RegisterType<IVideoExtractor, VideoExtractor>();
+            result.RegisterType<IFaceRecognizer, FaceRecognizer>();
+            result.RegisterType<IVideoSplitter, VideoSplitter>();
             result.RegisterType<IVideoProvider, VideoProviderWPF>();
             return result;
 

@@ -9,7 +9,8 @@ namespace BLL.Interfaces
     public interface IObserver
     {
         void Notify(string message);
-        string getMessage();
-        int getNotificationCount();
+        string GetMessage();
+        int GetNotificationCount();
+        void Reset();
     }
 }
