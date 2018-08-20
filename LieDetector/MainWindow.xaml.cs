@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
-using Accord.Video.FFMPEG;
-using System.Windows.Forms;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -12,6 +9,10 @@ using System.Reflection;
 using BLL;
 using Unity;
 using BLL.Interfaces;
+using System.Drawing;
+using Newtonsoft.Json;
+using System.Windows.Media.Imaging;
+using System.Drawing.Imaging;
 
 namespace LieDetector
 {
@@ -23,40 +24,88 @@ namespace LieDetector
         System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
         int nbImage;
         bool paused;
-        IObserver observerExtration, observerFaceReco;
+        IObserver observerSplitter, observerFaceReco;
         string filePath;
         string execDirecory;
         public MainWindow()
         {
             execDirecory = Assembly.GetEntryAssembly().Location.Remove(Assembly.GetEntryAssembly().Location.LastIndexOf('\\'));
-
             var unity = UnityConfig.Setup();
             videoSplitter = unity.Resolve<IVideoSplitter>();
             Thread.CurrentThread.Name = "Main";
             timer.Tick += tick;
-            observerExtration = new GenericObserver();
+            observerSplitter = new GenericObserver();
             observerFaceReco = new GenericObserver();
-            videoSplitter.AddObserverToExtractor(ref observerExtration);
+            videoSplitter.AddObserverToExtractor(ref observerSplitter);
             videoSplitter.AddObserverToFaceReco(ref observerFaceReco);
             InitializeComponent();
+        }
+        private BitmapImage ConverBitmapToBitmapImage(Bitmap bmp)
+        {
+            MemoryStream stream = new MemoryStream();
+            bmp.Save(stream, ImageFormat.Png);
+
+            BitmapImage bitmapImage = new BitmapImage();
+            bitmapImage.BeginInit();
+            bitmapImage.StreamSource = stream;
+            bitmapImage.EndInit();
+
+            return bitmapImage;
         }
         private void tick(object sender, EventArgs e)
         {
             try
             {
                 BoutonVideo.IsEnabled = videoSplitter.IsFinished();
-
-                nbImage = int.Parse(observerExtration.GetMessage().Split('/')[1]);
+                nbImage = int.Parse(observerSplitter.GetReport().Split('/')[1]);
                 progressFractionnage.Maximum = nbImage;
-                progressFractionnage.Value = observerExtration.GetNotificationCount();
                 progressFaceReco.Maximum = nbImage;
+                progressFractionnage.Value = observerSplitter.GetNotificationCount();
                 progressFaceReco.Value = observerFaceReco.GetNotificationCount();
-                avancementFragmentation.Content = observerExtration.GetMessage();
-                avancementFaceReco.Content = observerFaceReco.GetNotificationCount() + "/" + nbImage;
+                labelAvancementFragmentation.Content = observerSplitter.GetReport();
+                labelAvancementFaceReco.Content = observerFaceReco.GetNotificationCount() + "/" + nbImage;
+                string message = observerFaceReco.GetReport();
+                if (message != null)
+                {
+                    string[] result = message.Split('_');
+                    //si l'observeur rapporte une image traité
+                    if (result[0] != null && result[0] != "")
+                    {
+                        //creer une image
+                        Bitmap currentPicture = new Bitmap(result[0]);
+                        //si l'observeur a trouver un visage
+                        if (result[1] != null && result[1] != "[]")
+                        {
+                            Rectangle[] faces = JsonConvert.DeserializeObject<Rectangle[]>(result[1]);
+                            using (Graphics g = Graphics.FromImage(currentPicture))
+                            {
+                                Pen p = new Pen(Color.Red, (float)10.0);
+
+                                //dessine le rectangle ou se trouve le visage sur l'image
+                                g.DrawLine(p,
+                                        new System.Drawing.Point(faces[0].X, faces[0].Y),
+                                        new System.Drawing.Point(faces[0].X , faces[0].Y + faces[0].Height));
+                                g.DrawLine(p,
+                                        new System.Drawing.Point(faces[0].X, faces[0].Y + faces[0].Height),
+                                        new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y + faces[0].Height));
+                                g.DrawLine(p,
+                                        new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y + faces[0].Height),
+                                        new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y ));
+                                g.DrawLine(p,
+                                        new System.Drawing.Point(faces[0].X, faces[0].Y  ),
+                                        new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y ));
+                            }
+                        }
+                        //affiche l'image avec le rectangle si il y en a un à l'utilisateur
+                        pictureBox1.Source = ConverBitmapToBitmapImage(currentPicture);
+                    }
+                }
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.Error.WriteLine(ex.Message);
+                int i = 0;
 
 
             }
@@ -72,7 +121,7 @@ namespace LieDetector
             try
             {
 
-                filePath = videoSplitter.SplitAndFaceRecoAllVideo()[0];
+                filePath = videoSplitter.SplitAndFaceRecoAllVideoAsync(6)[0];
                 BoutonOpenImages.IsEnabled = true;
                 BoutonOpenFaces.IsEnabled = true;
                 BoutonPause.IsEnabled = true;
@@ -110,7 +159,7 @@ namespace LieDetector
         {
             timer.Stop();
             videoSplitter.Stop();
-            
+
             if (!videoSplitter.IsFinished())
             {
                 progressFractionnage.Foreground = System.Windows.Media.Brushes.DarkRed;
@@ -153,7 +202,7 @@ namespace LieDetector
                 Directory.Delete(execDirecory + "/resultat/fragmentation/" + fileName, true);
             }
         }
-    
+
 
     }
 }

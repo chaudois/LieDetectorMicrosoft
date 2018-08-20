@@ -4,20 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BLL.Interfaces;
+using BLL.Models;
+
 namespace BLL
 {
     public class GenericObserver : IObserver
     {
-        string message;
+        string rapport;
         int notificationCount;
         public GenericObserver()
         {
             notificationCount = 0;
-            message = "";
         }
-        public string GetMessage()
+        public string GetReport()
         {
-            return message;
+            return rapport;
         }
 
         public int GetNotificationCount()
@@ -25,10 +26,10 @@ namespace BLL
             return notificationCount;
         }
 
-        public void Notify(string message)
+        public void Notify(string newRapport)
         {
             notificationCount++;
-            this.message = message;
+            rapport = newRapport == null?rapport: newRapport;
         }
 
         public void Reset()

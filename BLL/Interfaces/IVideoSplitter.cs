@@ -12,7 +12,7 @@ namespace BLL.Interfaces
         /// summon the IVideoProvider given in the constructor to get a list of file from which extract faces
         /// </summary>
         /// <returns>array of string containing the full path of each chosen files by the user</returns>
-        List<string>  SplitAndFaceRecoAllVideo( );
+        List<string>  SplitAndFaceRecoAllVideoAsync( int simultaneousTask);
 
         bool IsFinished();
         void AddObserverToExtractor(ref IObserver middleWare);

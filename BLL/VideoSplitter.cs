@@ -15,7 +15,7 @@ namespace BLL
     {
         bool stop, pause, finished;
         List<IObserver> middleWares;
-        long   frameCount, PictureAnalysed, FaceFound;
+        long   frameCount;
         IFaceRecognizer _faceRecognizer;
         IVideoProvider _videoProvider;
         public bool IsFinished()
@@ -53,7 +53,7 @@ namespace BLL
         {
             _faceRecognizer.addObserver(ref middleWare);
         }
-        public void Split(string videoLocation, string execDirectory)
+        public void Split(string videoLocation, string execDirectory,int simultaneousTask)
         {
             stop = false;
             finished = false;
@@ -67,8 +67,7 @@ namespace BLL
                 reader.Open(videoLocation);
 
 
-                PictureAnalysed = FaceFound = 0;
-                frameCount = reader.FrameCount;
+                 frameCount = reader.FrameCount;
 
                 for (int i = 0; i < reader.FrameCount && !stop; i++)
                 {
@@ -77,6 +76,7 @@ namespace BLL
                     {
                         while (pause)
                         {
+                            Thread.Sleep(100);
 
                         }
                         string pathPicture = execDirectory + "\\resultat\\fragmentation\\" + fileName + "\\" + i + ".bmp";
@@ -98,23 +98,22 @@ namespace BLL
                             }
                         }
                         videoFrame.Dispose();
-                         _faceRecognizer.FaceRecoAsync(pathPicture,execDirectory);
+                        //lance un Task pour faire la reconaissance de visage sur cette image en async
+                         _faceRecognizer.FaceRecoAsync(pathPicture,execDirectory, simultaneousTask);
 
                     }
-
                 }
                 finished = true;
-
             }
 
         }
-        public List<string> SplitAndFaceRecoAllVideo()
+        public List<string> SplitAndFaceRecoAllVideoAsync(int simultaneousTask)
         {
             string execDirecory = Assembly.GetEntryAssembly().Location.Remove(Assembly.GetEntryAssembly().Location.LastIndexOf('\\'));
             List<string> files = _videoProvider.GetFiles();
             foreach (string file in files)
             {
-                Task.Run(() => Split(file, execDirecory));
+                Task.Run(() => Split(file, execDirecory, simultaneousTask));
             }
             return files;
         }

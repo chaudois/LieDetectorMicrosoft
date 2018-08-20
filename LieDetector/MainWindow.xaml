@@ -34,8 +34,8 @@
             <Image Name="imagePause" Source="Ressources/Images/pause.png" IsEnabled="False" />
         </Button>
         <Label x:Name="nomDuFichier" Content="" HorizontalAlignment="Left" Margin="579,10,0,0" VerticalAlignment="Top" Width="169" FontWeight="Bold" FontSize="20"/>
-        <Label Name="avancementFragmentation" Content="" HorizontalAlignment="Left" Margin="261,64,0,0" VerticalAlignment="Top" Height="29" Width="120"/>
-        <Label Name="avancementFaceReco" Content="" HorizontalAlignment="Left" Margin="263,114,0,0" VerticalAlignment="Top" Height="29" Width="118" RenderTransformOrigin="0.066,0.669"/>
+        <Label Name="labelAvancementFragmentation" Content="" HorizontalAlignment="Left" Margin="261,64,0,0" VerticalAlignment="Top" Height="29" Width="120"/>
+        <Label Name="labelAvancementFaceReco" Content="" HorizontalAlignment="Left" Margin="263,114,0,0" VerticalAlignment="Top" Height="29" Width="118" RenderTransformOrigin="0.066,0.669"/>
 
 
 

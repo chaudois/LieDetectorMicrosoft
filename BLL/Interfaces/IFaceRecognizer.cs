@@ -14,7 +14,7 @@ namespace BLL.Interfaces
         /// </summary>
         /// <param name="filePath">path to the file to analyse</param>
         /// <param name="saveDirectory">root directory where you want the result directory to be created</param>
-        void FaceRecoAsync(string filePath,string saveDirectory);
+        void FaceRecoAsync(string filePath,string saveDirectory,int maxSimultaneousTask);
         void Pause();
         void Stop();
     }
