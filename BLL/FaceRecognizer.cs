@@ -87,7 +87,7 @@ namespace BLL
                                 //c'est sur cette ligne que ce fait la reconnaissance facial
                                 Rectangle[] faces = new CascadeClassifier(XML_LOCATION).DetectMultiScale(normalizedMasterImage,
                                     1.05,
-                                    3,
+                                    10,
                                     Size.Empty);
                                 foreach (var face in faces)
                                 {
