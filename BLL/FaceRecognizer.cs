@@ -18,7 +18,7 @@ namespace BLL
     public class FaceRecognizer : IFaceRecognizer
     {
         private List<IObserver> middleWares;
-        const string XML_LOCATION = @"D:\sourcesexpaceo\git\LieDetector\LieDetector\Ressources\xml\haarcascade_frontalface_alt_tree.xml";
+        const string XML_LOCATION = @"C:\Users\damien.chaudois\Documents\Projets\LieDetector\LieDetector\Ressources\xml\haarcascade_frontalface_alt_tree.xml";
         ConcurrentQueue<string> pictureStack;
         bool pause, stop;
         int isRunning;
