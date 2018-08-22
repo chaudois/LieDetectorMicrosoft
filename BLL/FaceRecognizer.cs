@@ -4,27 +4,28 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BLL.Interfaces;
-using BLL.Models;
 using Emgu.CV;
 using Emgu.CV.Structure;
 using Newtonsoft.Json;
-
 namespace BLL
 {
     public class FaceRecognizer : IFaceRecognizer
     {
         private List<IObserver> middleWares;
-        const string XML_LOCATION = @"D:\sourcesexpaceo\git\LieDetector\LieDetector\Ressources\xml\haarcascade_frontalface_alt_tree.xml";
-        ConcurrentQueue<string> pictureStack;
+         ConcurrentQueue<string> pictureStack;
         bool pause, stop;
         int isRunning;
         List<Task> tasks;
         public FaceRecognizer()
         {
+ 
+
+
             tasks = new List<Task>();
             pictureStack = new ConcurrentQueue<string>();
             middleWares = new List<IObserver>();
@@ -85,9 +86,9 @@ namespace BLL
                             {
 
                                 //c'est sur cette ligne que ce fait la reconnaissance facial
-                                Rectangle[] faces = new CascadeClassifier(XML_LOCATION).DetectMultiScale(normalizedMasterImage,
+                                Rectangle[] faces = new CascadeClassifier(Properties.Resources.xml).DetectMultiScale(normalizedMasterImage,
                                     1.05,
-                                    10,
+                                    -1,
                                     Size.Empty);
                                 foreach (var face in faces)
                                 {

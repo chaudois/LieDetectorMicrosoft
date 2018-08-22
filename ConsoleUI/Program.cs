@@ -37,10 +37,10 @@ namespace ConsoleUI
                 try
                 {
                     Console.Clear();
-                    Console.WriteLine("Split : ");
+                    Console.Write("Split : ");
                     int nbImage = int.Parse(observerSplitter.GetReport().Split('/')[1]);
                     Print(observerSplitter.GetReport());
-                    Console.WriteLine("FaceReco : ");
+                    Console.Write("FaceReco : ");
                     Print(observerFaceReco.GetNotificationCount() + "/" + nbImage);
                     Thread.Sleep(100);
                 }
