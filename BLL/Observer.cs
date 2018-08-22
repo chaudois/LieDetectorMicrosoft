@@ -7,11 +7,11 @@ using BLL.Interfaces;
 
 namespace BLL
 {
-    public class GenericObserver : IObserver
+    public class Observer 
     {
         string rapport;
         int notificationCount;
-        public GenericObserver()
+        public Observer()
         {
             notificationCount = 0;
         }

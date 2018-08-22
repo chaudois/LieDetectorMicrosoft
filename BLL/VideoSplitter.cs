@@ -11,11 +11,12 @@ using Accord.Video.FFMPEG;
 using BLL.Interfaces;
 namespace BLL
 {
-    public class VideoSplitter : IVideoSplitter
+    public class VideoSplitter : IVideoSplitter  
     {
         bool stop, pause, finished;
-        List<IObserver> middleWares;
+        private Dictionary<string, Observer> observers { get; set; }
         long   frameCount;
+        const int SIMULTANEOUS_TASK = 6;
         IFaceRecognizer _faceRecognizer;
         IVideoProvider _videoProvider;
         public bool IsFinished()
@@ -27,7 +28,7 @@ namespace BLL
 
             _videoProvider = videoProvider;
             _faceRecognizer = faceRecognizer;
-            middleWares = new List<IObserver>();
+            observers = new Dictionary<string, Observer>();
 
         }
         public void Stop()
@@ -35,7 +36,7 @@ namespace BLL
             stop = true;
             
             _faceRecognizer.Stop();
-            foreach (var item in middleWares)
+            foreach (var item in observers.Values)
             {
                 item.Reset();
             }
@@ -44,16 +45,8 @@ namespace BLL
         {
             pause = !pause;
             _faceRecognizer.Pause();
-        }
-        public void AddObserverToExtractor(ref IObserver middleWare)
-        {
-            middleWares.Add(middleWare);
-        }
-        public void AddObserverToFaceReco(ref IObserver middleWare)
-        {
-            _faceRecognizer.addObserver(ref middleWare);
-        }
-        public void Split(string videoLocation, string execDirectory,int simultaneousTask)
+        } 
+        public void Split(string videoLocation, string execDirectory)
         {
             stop = false;
             finished = false;
@@ -84,22 +77,20 @@ namespace BLL
                         //si la frame exist déja, ne la remplace pas, skip le traitement
                         if (!File.Exists(pathPicture))
                         {
-
                             videoFrame.Save(pathPicture);
-
                         }
 
                         //on informe tout les observeurs
-                        if (middleWares != null && middleWares.Count() > 0)
+                        if (observers != null && observers.Count() > 0)
                         {
-                            foreach (var middleWare in middleWares)
+                            foreach (var middleWare in observers)
                             {
-                                middleWare.Notify(i.ToString() + "/" + frameCount);
+                                observers[videoLocation].Notify(i.ToString() + "/" + frameCount);
                             }
                         }
                         videoFrame.Dispose();
                         //lance un Task pour faire la reconaissance de visage sur cette image en async
-                         _faceRecognizer.FaceRecoAsync(pathPicture,execDirectory, simultaneousTask);
+                         _faceRecognizer.FaceRecoAsync(pathPicture,execDirectory);
 
                     }
                 }
@@ -107,16 +98,26 @@ namespace BLL
             }
 
         }
-        public List<string> SplitAndFaceRecoAllVideoAsync(int simultaneousTask)
+        public List<string> SplitAndFaceRecoAllVideoAsync()
         {
             string execDirecory = Assembly.GetEntryAssembly().Location.Remove(Assembly.GetEntryAssembly().Location.LastIndexOf('\\'));
             List<string> files = _videoProvider.GetFiles();
             foreach (string file in files)
             {
-                Task.Run(() => Split(file, execDirecory, simultaneousTask));
+                observers.Add(file, new Observer());
+                Task.Run(() => Split(file, execDirecory));
             }
             return files;
         }
-        
+
+        public Observer GetSplitProgressReport(string fileName)
+        {
+            return observers[fileName];
+        }
+
+        public Observer GetFaceRecoProgressReport(string videoName)
+        {
+            return _faceRecognizer.GetReport(videoName);
+        }
     }
 }

@@ -24,8 +24,7 @@ namespace LieDetector
         System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
         int nbImage;
         bool paused;
-        IObserver observerSplitter, observerFaceReco;
-        string filePath;
+        string[] filesPath;
         string execDirecory;
         public MainWindow()
         {
@@ -34,10 +33,6 @@ namespace LieDetector
             videoSplitter = unity.Resolve<IVideoSplitter>();
             Thread.CurrentThread.Name = "Main";
             timer.Tick += tick;
-            observerSplitter = new GenericObserver();
-            observerFaceReco = new GenericObserver();
-            videoSplitter.AddObserverToExtractor(ref observerSplitter);
-            videoSplitter.AddObserverToFaceReco(ref observerFaceReco);
             InitializeComponent();
         }
         private BitmapImage ConverBitmapToBitmapImage(Bitmap bmp)
@@ -56,15 +51,16 @@ namespace LieDetector
         {
             try
             {
+                string videoName=filesPath[0].Split('\\')[filesPath[0].Split('\\').Length-1];
                 BoutonVideo.IsEnabled = videoSplitter.IsFinished();
-                nbImage = int.Parse(observerSplitter.GetReport().Split('/')[1]);
+                nbImage = int.Parse(videoSplitter.GetSplitProgressReport(filesPath[0]).GetReport().Split('/')[1]);
                 progressFractionnage.Maximum = nbImage;
                 progressFaceReco.Maximum = nbImage;
-                progressFractionnage.Value = observerSplitter.GetNotificationCount();
-                progressFaceReco.Value = observerFaceReco.GetNotificationCount();
-                labelAvancementFragmentation.Content = observerSplitter.GetReport();
-                labelAvancementFaceReco.Content = observerFaceReco.GetNotificationCount() + "/" + nbImage;
-                string message = observerFaceReco.GetReport();
+                progressFractionnage.Value = videoSplitter.GetSplitProgressReport(filesPath[0]).GetNotificationCount();
+                progressFaceReco.Value = videoSplitter.GetFaceRecoProgressReport(videoName).GetNotificationCount();
+                labelAvancementFragmentation.Content = videoSplitter.GetSplitProgressReport(filesPath[0]).GetReport();
+                labelAvancementFaceReco.Content = videoSplitter.GetFaceRecoProgressReport(videoName).GetNotificationCount() + "/" + nbImage;
+                string message = videoSplitter.GetFaceRecoProgressReport(filesPath[0]).GetReport();
                 if (message != null)
                 {
                     string[] result = message.Split('_');
@@ -121,12 +117,12 @@ namespace LieDetector
             try
             {
 
-                filePath = videoSplitter.SplitAndFaceRecoAllVideoAsync(6)[0];
+                filesPath = videoSplitter.SplitAndFaceRecoAllVideoAsync().ToArray() ;
                 BoutonOpenImages.IsEnabled = true;
                 BoutonOpenFaces.IsEnabled = true;
                 BoutonPause.IsEnabled = true;
                 BoutonCancel.IsEnabled = true;
-                BoutonDeleteResultFractionnage.IsEnabled = false;
+                BoutonDeleteResultFractionnage.IsEnabled = false; 
                 BoutonDeleteResultFaceReco.IsEnabled = false;
                 progressFractionnage.Foreground = System.Windows.Media.Brushes.Green;
                 progressFaceReco.Foreground = System.Windows.Media.Brushes.Green;
@@ -144,14 +140,14 @@ namespace LieDetector
         {
             string execDirecory = Assembly.GetEntryAssembly().Location.Remove(Assembly.GetEntryAssembly().Location.LastIndexOf('\\'));
 
-            string fileName = filePath.Remove(0, filePath.LastIndexOf("\\") + 1).Split('.')[0];
+            string fileName = filesPath[0].Remove(0, filesPath[0].LastIndexOf("\\") + 1).Split('.')[0];
             if (Directory.Exists(execDirecory + "/resultat/fragmentation/" + fileName))
                 Process.Start(execDirecory + "/resultat/fragmentation/" + fileName);
         }
         private void ButtonDisplayImageFaceReco_Click(object sender, RoutedEventArgs e)
         {
 
-            string fileName = filePath.Remove(0, filePath.LastIndexOf("\\") + 1).Split('.')[0];
+            string fileName = filesPath[0].Remove(0, filesPath[0].LastIndexOf("\\") + 1).Split('.')[0];
             if (Directory.Exists(execDirecory + "/resultat/visages/" + fileName))
                 Process.Start(execDirecory + "/resultat/visages/" + fileName);
         }
@@ -184,7 +180,7 @@ namespace LieDetector
         }
         private void BoutonDeleteResultFaceReco_Click(object sender, RoutedEventArgs e)
         {
-            string fileName = filePath.Remove(0, filePath.LastIndexOf("\\") + 1).Split('.')[0];
+            string fileName = filesPath[0].Remove(0, filesPath[0].LastIndexOf("\\") + 1).Split('.')[0];
             BoutonOpenFaces.IsEnabled = false;
             BoutonDeleteResultFaceReco.IsEnabled = false;
             if (Directory.Exists(execDirecory + "/resultat/visages/" + fileName))
@@ -194,7 +190,7 @@ namespace LieDetector
         }
         private void BoutonDeleteResultFragmentation_Click(object sender, RoutedEventArgs e)
         {
-            string fileName = filePath.Remove(0, filePath.LastIndexOf("\\") + 1).Split('.')[0];
+            string fileName = filesPath[0].Remove(0, filesPath[0].LastIndexOf("\\") + 1).Split('.')[0];
             BoutonOpenImages.IsEnabled = false;
             BoutonDeleteResultFractionnage.IsEnabled = false;
             if (Directory.Exists(execDirecory + "/resultat/fragmentation/" + fileName))

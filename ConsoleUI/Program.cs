@@ -17,18 +17,16 @@ namespace ConsoleUI
         }
         static void Main(string[] args)
         {
-            
 
-            IObserver observerSplitter, observerFaceReco;
+
+            Observer observerSplitter, observerFaceReco;
             IUnityContainer unity = UnityConfig.Setup();
             var videoSplitter = unity.Resolve<IVideoSplitter>();
 
-            observerSplitter = new GenericObserver();
-            observerFaceReco = new GenericObserver();
-            videoSplitter.AddObserverToExtractor(ref observerSplitter);
-            videoSplitter.AddObserverToFaceReco(ref observerFaceReco);
+            observerSplitter = new Observer();
+            observerFaceReco = new Observer();
             Print("fichiers analysé : ");
-            foreach (var item in videoSplitter.SplitAndFaceRecoAllVideoAsync(6))
+            foreach (var item in videoSplitter.SplitAndFaceRecoAllVideoAsync())
             {
                 Print(item);
             }

@@ -16,20 +16,22 @@ namespace BLL
 {
     public class FaceRecognizer : IFaceRecognizer
     {
-        private List<IObserver> middleWares;
-         ConcurrentQueue<string> pictureStack;
+        private Dictionary<string, Observer> observers { get; set; }
+        ConcurrentQueue<string> pictureStack;
         bool pause, stop;
         int isRunning;
+        public int maxSimultaneousTask { get; set; }
         List<Task> tasks;
         public FaceRecognizer()
         {
- 
+
 
 
             tasks = new List<Task>();
             pictureStack = new ConcurrentQueue<string>();
-            middleWares = new List<IObserver>();
+            observers = new Dictionary<string, Observer>();
             isRunning = 0;
+            maxSimultaneousTask = 6;
         }
         /// <summary>
         /// pause all Tasks
@@ -44,17 +46,13 @@ namespace BLL
         public void Stop()
         {
             stop = true;
-            foreach (var middleWare in middleWares)
+            foreach (var middleWare in observers.Values)
             {
                 middleWare.Reset();
             }
             pictureStack = new ConcurrentQueue<string>();
         }
-        public void addObserver(ref IObserver middleWare)
-        {
-            middleWares.Add(middleWare);
-        }
-        public void FaceReco(string filePath, string saveDirectory)
+        public void FaceRecoFromQueue( string saveDirectory)
         {
             string VideoName = "";
             while (pictureStack.Count() > 0 && !stop)
@@ -118,43 +116,45 @@ namespace BLL
 
 
                                 }
-
-
-
-                                foreach (var middleWare in middleWares)
-                                {
-                                    string message = pathPicture + "_" + JsonConvert.SerializeObject(faces) + "_";
-                                    middleWare.Notify(message);
-                                }
+                                string message = pathPicture + "_" + JsonConvert.SerializeObject(faces) + "_";
+                                observers[VideoName].Notify(message);
                             }
                             catch (Exception e)
                             {
                                 Console.WriteLine(e.Message);
                             }
-
                         }
                     }
                 }
             }
             isRunning--;
-
         }
 
 
-        public void FaceRecoAsync(string filePath, string saveDirectory, int maxSimultaneousTask)
+        public void FaceRecoAsync(string filePath, string saveDirectory)
         {
             pictureStack.Enqueue(filePath);
+            string videoName = filePath.Split('\\')[filePath.Split('\\').Length - 2];
+            if (!observers.ContainsKey(videoName))
+            {
+                observers.Add(videoName, new Observer());
+            }
             isRunning++;
             if (isRunning < maxSimultaneousTask)
             {
-                tasks.Add( new Task(() =>
-                     FaceReco(filePath, saveDirectory)
-                     ));
+                tasks.Add(new Task(() =>
+                {
+                    FaceRecoFromQueue( saveDirectory);
+                }));
                 stop = false;
                 tasks.Last().Start();
 
             }
         }
 
+        public Observer GetReport(string videoName)
+        {
+            return observers[videoName.Split('.')[0]];
+        }
     }
 }
