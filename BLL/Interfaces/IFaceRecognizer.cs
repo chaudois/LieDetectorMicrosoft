@@ -15,7 +15,7 @@ namespace BLL.Interfaces
         /// <param name="saveDirectory">root directory where you want the result directory to be created</param>
         void FaceRecoAsync(string filePath,string saveDirectory);
         void Pause();
-        void Stop();
-        Observer GetReport(string fileName);
+        void StopAll();
+        Observer GetReport();
     }
 }

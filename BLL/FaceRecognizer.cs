@@ -14,9 +14,9 @@ using Emgu.CV.Structure;
 using Newtonsoft.Json;
 namespace BLL
 {
-    public class FaceRecognizer : IFaceRecognizer
+    internal class FaceRecognizer : IFaceRecognizer
     {
-        private Dictionary<string, Observer> observers { get; set; }
+        private Observer observer { get; set; }
         ConcurrentQueue<string> pictureStack;
         bool pause, stop;
         int isRunning;
@@ -29,7 +29,7 @@ namespace BLL
 
             tasks = new List<Task>();
             pictureStack = new ConcurrentQueue<string>();
-            observers = new Dictionary<string, Observer>();
+            observer = new Observer();
             isRunning = 0;
             maxSimultaneousTask = 6;
         }
@@ -43,16 +43,14 @@ namespace BLL
         /// <summary>
         /// finish all task, reset all properties
         /// </summary>
-        public void Stop()
+        public void StopAll()
         {
             stop = true;
-            foreach (var middleWare in observers.Values)
-            {
-                middleWare.Reset();
-            }
+            observer.Reset();
+
             pictureStack = new ConcurrentQueue<string>();
         }
-        public void FaceRecoFromQueue( string saveDirectory)
+        public void FaceRecoFromQueue(string videoName, string saveDirectory)
         {
             string VideoName = "";
             while (pictureStack.Count() > 0 && !stop)
@@ -117,7 +115,7 @@ namespace BLL
 
                                 }
                                 string message = pathPicture + "_" + JsonConvert.SerializeObject(faces) + "_";
-                                observers[VideoName].Notify(message);
+                                observer.Notify(message);
                             }
                             catch (Exception e)
                             {
@@ -128,23 +126,21 @@ namespace BLL
                 }
             }
             isRunning--;
+
+
         }
-
-
         public void FaceRecoAsync(string filePath, string saveDirectory)
         {
-            pictureStack.Enqueue(filePath);
             string videoName = filePath.Split('\\')[filePath.Split('\\').Length - 2];
-            if (!observers.ContainsKey(videoName))
-            {
-                observers.Add(videoName, new Observer());
-            }
+            pictureStack.Enqueue(filePath);
+
+
             isRunning++;
             if (isRunning < maxSimultaneousTask)
             {
                 tasks.Add(new Task(() =>
                 {
-                    FaceRecoFromQueue( saveDirectory);
+                    FaceRecoFromQueue(videoName, saveDirectory);
                 }));
                 stop = false;
                 tasks.Last().Start();
@@ -152,9 +148,9 @@ namespace BLL
             }
         }
 
-        public Observer GetReport(string videoName)
+        public Observer GetReport()
         {
-            return observers[videoName.Split('.')[0]];
+            return observer;
         }
     }
 }

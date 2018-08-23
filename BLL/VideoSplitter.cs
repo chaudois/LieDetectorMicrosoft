@@ -11,31 +11,34 @@ using Accord.Video.FFMPEG;
 using BLL.Interfaces;
 namespace BLL
 {
-    public class VideoSplitter : IVideoSplitter  
+    public class VideoSplitter : IVideoSplitter
     {
         bool stop, pause, finished;
         private Dictionary<string, Observer> observers { get; set; }
-        long   frameCount;
+        private Dictionary<string, FaceRecognizer> _faceRecognizer { get; set; }
+        long frameCount;
         const int SIMULTANEOUS_TASK = 6;
-        IFaceRecognizer _faceRecognizer;
         IVideoProvider _videoProvider;
         public bool IsFinished()
         {
             return finished;
         }
-        public VideoSplitter(IFaceRecognizer faceRecognizer, IVideoProvider videoProvider)
+        public VideoSplitter(IVideoProvider videoProvider)
         {
 
             _videoProvider = videoProvider;
-            _faceRecognizer = faceRecognizer;
             observers = new Dictionary<string, Observer>();
+            _faceRecognizer = new Dictionary<string, FaceRecognizer>();
 
         }
         public void Stop()
         {
             stop = true;
-            
-            _faceRecognizer.Stop();
+            foreach (var item in _faceRecognizer.Values)
+            {
+
+                item.StopAll();
+            }
             foreach (var item in observers.Values)
             {
                 item.Reset();
@@ -44,8 +47,11 @@ namespace BLL
         public void Pause()
         {
             pause = !pause;
-            _faceRecognizer.Pause();
-        } 
+            foreach (var item in _faceRecognizer.Values)
+            {
+                item.Pause();
+            }
+        }
         public void Split(string videoLocation, string execDirectory)
         {
             stop = false;
@@ -60,11 +66,11 @@ namespace BLL
                 reader.Open(videoLocation);
 
 
-                 frameCount = reader.FrameCount;
-
+                frameCount = reader.FrameCount;
+                _faceRecognizer.Add(videoLocation, new FaceRecognizer());
                 for (int i = 0; i < reader.FrameCount && !stop; i++)
                 {
-                    
+
                     using (Bitmap videoFrame = reader.ReadVideoFrame())
                     {
                         while (pause)
@@ -90,7 +96,7 @@ namespace BLL
                         }
                         videoFrame.Dispose();
                         //lance un Task pour faire la reconaissance de visage sur cette image en async
-                         _faceRecognizer.FaceRecoAsync(pathPicture,execDirectory);
+                        _faceRecognizer[videoLocation].FaceRecoAsync(pathPicture, execDirectory);
 
                     }
                 }
@@ -109,15 +115,19 @@ namespace BLL
             }
             return files;
         }
-
+        /// <summary>
+        /// retourne l'objet observer 
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
         public Observer GetSplitProgressReport(string fileName)
         {
             return observers[fileName];
         }
 
-        public Observer GetFaceRecoProgressReport(string videoName)
+        public Observer GetFaceRecoProgressReport(string fileName)
         {
-            return _faceRecognizer.GetReport(videoName);
+            return _faceRecognizer[fileName].GetReport();
         }
     }
 }

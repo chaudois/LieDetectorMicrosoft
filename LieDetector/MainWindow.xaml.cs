@@ -51,15 +51,19 @@ namespace LieDetector
         {
             try
             {
-                string videoName=filesPath[0].Split('\\')[filesPath[0].Split('\\').Length-1];
+                nomDuFichier.Content = filesPath[0].Split('\\')[filesPath[0].Split('\\').Length - 1];
                 BoutonVideo.IsEnabled = videoSplitter.IsFinished();
                 nbImage = int.Parse(videoSplitter.GetSplitProgressReport(filesPath[0]).GetReport().Split('/')[1]);
+
                 progressFractionnage.Maximum = nbImage;
                 progressFaceReco.Maximum = nbImage;
+
                 progressFractionnage.Value = videoSplitter.GetSplitProgressReport(filesPath[0]).GetNotificationCount();
-                progressFaceReco.Value = videoSplitter.GetFaceRecoProgressReport(videoName).GetNotificationCount();
+                progressFaceReco.Value = videoSplitter.GetFaceRecoProgressReport(filesPath[0]).GetNotificationCount();
+
                 labelAvancementFragmentation.Content = videoSplitter.GetSplitProgressReport(filesPath[0]).GetReport();
-                labelAvancementFaceReco.Content = videoSplitter.GetFaceRecoProgressReport(videoName).GetNotificationCount() + "/" + nbImage;
+                labelAvancementFaceReco.Content = videoSplitter.GetFaceRecoProgressReport(filesPath[0]).GetNotificationCount() + "/" + nbImage;
+
                 string message = videoSplitter.GetFaceRecoProgressReport(filesPath[0]).GetReport();
                 if (message != null)
                 {
@@ -80,20 +84,20 @@ namespace LieDetector
                                 //dessine le rectangle ou se trouve le visage sur l'image
                                 g.DrawLine(p,
                                         new System.Drawing.Point(faces[0].X, faces[0].Y),
-                                        new System.Drawing.Point(faces[0].X , faces[0].Y + faces[0].Height));
+                                        new System.Drawing.Point(faces[0].X, faces[0].Y + faces[0].Height));
                                 g.DrawLine(p,
                                         new System.Drawing.Point(faces[0].X, faces[0].Y + faces[0].Height),
                                         new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y + faces[0].Height));
                                 g.DrawLine(p,
                                         new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y + faces[0].Height),
-                                        new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y ));
+                                        new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y));
                                 g.DrawLine(p,
-                                        new System.Drawing.Point(faces[0].X, faces[0].Y  ),
-                                        new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y ));
+                                        new System.Drawing.Point(faces[0].X, faces[0].Y),
+                                        new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y));
                             }
                         }
                         //affiche l'image avec le rectangle si il y en a un à l'utilisateur
-                        pictureBox1.Source = ConverBitmapToBitmapImage(currentPicture);
+                        pictureBox1.Source = ConverBitmapToBitmapImage(currentPicture);//merci stackOverflow
                     }
                 }
 
@@ -117,12 +121,12 @@ namespace LieDetector
             try
             {
 
-                filesPath = videoSplitter.SplitAndFaceRecoAllVideoAsync().ToArray() ;
+                filesPath = videoSplitter.SplitAndFaceRecoAllVideoAsync().ToArray();
                 BoutonOpenImages.IsEnabled = true;
                 BoutonOpenFaces.IsEnabled = true;
                 BoutonPause.IsEnabled = true;
                 BoutonCancel.IsEnabled = true;
-                BoutonDeleteResultFractionnage.IsEnabled = false; 
+                BoutonDeleteResultFractionnage.IsEnabled = false;
                 BoutonDeleteResultFaceReco.IsEnabled = false;
                 progressFractionnage.Foreground = System.Windows.Media.Brushes.Green;
                 progressFaceReco.Foreground = System.Windows.Media.Brushes.Green;
