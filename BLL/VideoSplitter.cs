@@ -67,7 +67,7 @@ namespace BLL
 
 
                 frameCount = reader.FrameCount;
-                _faceRecognizer.Add(videoLocation, new FaceRecognizer());
+                _faceRecognizer.Add(videoLocation, new FaceRecognizer());  
                 for (int i = 0; i < reader.FrameCount && !stop; i++)
                 {
 
@@ -104,8 +104,9 @@ namespace BLL
             }
 
         }
-        public List<string> SplitAndFaceRecoAllVideoAsync()
+        public List<string> SplitAndFaceRecoAllVideoAsync(IVideoProvider videoProvider=null)
         {
+            if (videoProvider == null) videoProvider = _videoProvider;
             string execDirecory = Assembly.GetEntryAssembly().Location.Remove(Assembly.GetEntryAssembly().Location.LastIndexOf('\\'));
             List<string> files = _videoProvider.GetFiles();
             foreach (string file in files)

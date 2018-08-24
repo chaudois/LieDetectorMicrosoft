@@ -114,8 +114,6 @@ namespace LieDetector
         }
         private void ButtonVideo_Click(object sender, RoutedEventArgs e)
         {
-            //OpenFileDialog openFileDialog = new OpenFileDialog();
-            //openFileDialog.ShowDialog();
             videoSplitter.Stop();
 
             try

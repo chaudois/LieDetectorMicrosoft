@@ -49,11 +49,12 @@ namespace BLL
             observer.Reset();
 
             pictureStack = new ConcurrentQueue<string>();
+
         }
         public void FaceRecoFromQueue(string videoName, string saveDirectory)
         {
             string VideoName = "";
-            while (pictureStack.Count() > 0 && !stop)
+            while (pictureStack.Count() > 0 && !stop && isRunning <= maxSimultaneousTask)
             {
                 while (pause)
                 {
@@ -80,12 +81,16 @@ namespace BLL
 
                             try
                             {
-
+                                Rectangle[] faces;
                                 //c'est sur cette ligne que ce fait la reconnaissance facial
-                                Rectangle[] faces = new CascadeClassifier(Properties.Resources.xml).DetectMultiScale(normalizedMasterImage,
-                                    1.05,
-                                    -1,
-                                    Size.Empty);
+                                using (var cascadeClassifier = new CascadeClassifier(Properties.Resources.xml))
+                                {
+                                    faces = cascadeClassifier.DetectMultiScale(normalizedMasterImage,
+                                       1.05,
+                                       -1,
+                                       Size.Empty);
+
+                                }
                                 foreach (var face in faces)
                                 {
 
@@ -135,9 +140,9 @@ namespace BLL
             pictureStack.Enqueue(filePath);
 
 
-            isRunning++;
             if (isRunning < maxSimultaneousTask)
             {
+                isRunning++;
                 tasks.Add(new Task(() =>
                 {
                     FaceRecoFromQueue(videoName, saveDirectory);
