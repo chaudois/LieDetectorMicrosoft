@@ -67,7 +67,7 @@ namespace LieDetector
                 string message = videoSplitter.GetFaceRecoProgressReport(filesPath[0]).GetReport();
                 if (message != null)
                 {
-                    string[] result = message.Split('_');
+                    string[] result = message.Split('&');
                     //si l'observeur rapporte une image traité
                     if (result[0] != null && result[0] != "")
                     {
@@ -79,21 +79,40 @@ namespace LieDetector
                             Rectangle[] faces = JsonConvert.DeserializeObject<Rectangle[]>(result[1]);
                             using (Graphics g = Graphics.FromImage(currentPicture))
                             {
-                                Pen p = new Pen(Color.Red, (float)10.0);
+                                Pen p = null;
+                                switch (result[2])
+                                {
+                                    case "haarcascade_frontalface_alt_tree":
+                                        p = new Pen(Color.Red, (float)10.0);
+                                        break;
+                                    case "haarcascade_frontalface_alt":
+                                        p = new Pen(Color.Blue, (float)10.0);
+                                        break;
+                                    case "haarcascade_frontalface_alt2":
+                                        p = new Pen(Color.Green, (float)10.0);
+                                        break;
+                                    case "haarcascade_frontalface_default":
+                                        p = new Pen(Color.Yellow, (float)10.0);
+                                        break;
 
-                                //dessine le rectangle ou se trouve le visage sur l'image
-                                g.DrawLine(p,
-                                        new System.Drawing.Point(faces[0].X, faces[0].Y),
-                                        new System.Drawing.Point(faces[0].X, faces[0].Y + faces[0].Height));
-                                g.DrawLine(p,
-                                        new System.Drawing.Point(faces[0].X, faces[0].Y + faces[0].Height),
-                                        new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y + faces[0].Height));
-                                g.DrawLine(p,
-                                        new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y + faces[0].Height),
-                                        new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y));
-                                g.DrawLine(p,
-                                        new System.Drawing.Point(faces[0].X, faces[0].Y),
-                                        new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y));
+                                }
+                                if (p != null)
+                                {
+
+                                    //dessine le rectangle ou se trouve le visage sur l'image
+                                    g.DrawLine(p,
+                                            new System.Drawing.Point(faces[0].X, faces[0].Y),
+                                            new System.Drawing.Point(faces[0].X, faces[0].Y + faces[0].Height));
+                                    g.DrawLine(p,
+                                            new System.Drawing.Point(faces[0].X, faces[0].Y + faces[0].Height),
+                                            new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y + faces[0].Height));
+                                    g.DrawLine(p,
+                                            new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y + faces[0].Height),
+                                            new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y));
+                                    g.DrawLine(p,
+                                            new System.Drawing.Point(faces[0].X, faces[0].Y),
+                                            new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y));
+                                }
                             }
                         }
                         //affiche l'image avec le rectangle si il y en a un à l'utilisateur

@@ -31,7 +31,7 @@ namespace BLL
             pictureStack = new ConcurrentQueue<string>();
             observer = new Observer();
             isRunning = 0;
-            maxSimultaneousTask = 6;
+            maxSimultaneousTask = 12;
         }
         /// <summary>
         /// pause all Tasks
@@ -51,7 +51,11 @@ namespace BLL
             pictureStack = new ConcurrentQueue<string>();
 
         }
-        public void FaceRecoFromQueue(string videoName, string saveDirectory)
+        /// <summary>
+        /// dequeue la queue, traite l'image avec emgu.cv en notifiant l'observer du resultat
+        /// </summary>
+        /// <param name="saveDirectory">dossier ou enregistrer l'image après avoir detecter un rectangle de visage</param>
+        private void FaceRecoFromQueue(string saveDirectory)
         {
             string VideoName = "";
             while (pictureStack.Count() > 0 && !stop && isRunning <= maxSimultaneousTask)
@@ -66,29 +70,70 @@ namespace BLL
 
                 if (pathPicture != null)
                 {
-                    string fileName = pathPicture.Split('\\').ToList().Last();
-                    if (VideoName == "")
-                    {
-                        VideoName = pathPicture.Split('\\').ToList()[pathPicture.Split('\\').ToList().Count() - 2];
-                        Thread.CurrentThread.Name = "ProcessPicture_" + VideoName + "_" + isRunning;
-                        Directory.CreateDirectory(saveDirectory + "\\resultat\\visages\\" + VideoName);
-                    }
-                    using (Bitmap masterImage = new Bitmap(pathPicture))
+                    try
                     {
 
-                        using (Image<Gray, Byte> normalizedMasterImage = new Image<Gray, Byte>(masterImage))
+                        string fileName = pathPicture.Split('\\').ToList().Last();
+                        if (VideoName == "")
+                        {
+                            VideoName = pathPicture.Split('\\').ToList()[pathPicture.Split('\\').ToList().Count() - 2];
+                            Thread.CurrentThread.Name = "ProcessPicture_" + VideoName + "_" + isRunning;
+                            Directory.CreateDirectory(saveDirectory + "\\resultat\\visages\\" + VideoName);
+                        }
+                        using (Bitmap masterImage = new Bitmap(pathPicture))
                         {
 
-                            try
+                            using (Image<Gray, Byte> normalizedMasterImage = new Image<Gray, Byte>(masterImage))
                             {
+
                                 Rectangle[] faces;
-                                //c'est sur cette ligne que ce fait la reconnaissance facial
-                                using (var cascadeClassifier = new CascadeClassifier(Properties.Resources.xml))
+                                string foundWith = "";
+                                //c'est sur ce block que ce fait la reconnaissance facial
+                                using (var cascadeClassifier = new CascadeClassifier("xml/haarcascade_frontalface_alt_tree.xml"))
                                 {
                                     faces = cascadeClassifier.DetectMultiScale(normalizedMasterImage,
                                        1.05,
                                        -1,
                                        Size.Empty);
+                                    foundWith = "haarcascade_frontalface_alt_tree";
+
+                                }
+                                if (faces.Count() == 0)
+                                {
+                                    using (var cascadeClassifier = new CascadeClassifier("xml/haarcascade_frontalface_alt.xml"))
+                                    {
+                                        faces = cascadeClassifier.DetectMultiScale(normalizedMasterImage,
+                                           1.05,
+                                           -1,
+                                           Size.Empty);
+                                        foundWith = "haarcascade_frontalface_alt";
+
+                                    }
+                                }
+                                if (faces.Count() == 0)
+                                {
+                                    using (var cascadeClassifier = new CascadeClassifier("xml/haarcascade_frontalface_alt2.xml"))
+                                    {
+                                        faces = cascadeClassifier.DetectMultiScale(normalizedMasterImage,
+                                           1.05,
+                                           -1,
+                                           Size.Empty);
+
+                                    }
+                                    foundWith = "haarcascade_frontalface_alt2";
+
+                                }
+                                if (faces.Count() == 0)
+                                {
+                                    using (var cascadeClassifier = new CascadeClassifier("xml/haarcascade_frontalface_default.xml"))
+                                    {
+                                        faces = cascadeClassifier.DetectMultiScale(normalizedMasterImage,
+                                           1.05,
+                                           -1,
+                                           Size.Empty);
+
+                                    }
+                                    foundWith = "haarcascade_frontalface_default";
 
                                 }
                                 foreach (var face in faces)
@@ -119,14 +164,15 @@ namespace BLL
 
 
                                 }
-                                string message = pathPicture + "_" + JsonConvert.SerializeObject(faces) + "_";
+                                string message = pathPicture + "&" + JsonConvert.SerializeObject(faces) + "&"+foundWith;
                                 observer.Notify(message);
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine(e.Message);
+
                             }
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.Error.WriteLine("Erreur dans FaceRecognizer.FaceRecoFromQueue(string saveDirectory) : " + e.Message);
                     }
                 }
             }
@@ -136,7 +182,6 @@ namespace BLL
         }
         public void FaceRecoAsync(string filePath, string saveDirectory)
         {
-            string videoName = filePath.Split('\\')[filePath.Split('\\').Length - 2];
             pictureStack.Enqueue(filePath);
 
 
@@ -145,7 +190,7 @@ namespace BLL
                 isRunning++;
                 tasks.Add(new Task(() =>
                 {
-                    FaceRecoFromQueue(videoName, saveDirectory);
+                    FaceRecoFromQueue(saveDirectory);
                 }));
                 stop = false;
                 tasks.Last().Start();

@@ -79,14 +79,5 @@ namespace BLL.Properties {
                 return ResourceManager.GetString("haarcascade_frontalface_alt_tree", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Recherche une chaîne localisée semblable à xml\haarcascade_frontalface_alt_tree.xml.
-        /// </summary>
-        internal static string xml {
-            get {
-                return ResourceManager.GetString("xml", resourceCulture);
-            }
-        }
     }
 }

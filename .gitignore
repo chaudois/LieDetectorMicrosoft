@@ -14,3 +14,8 @@
 /packages
 /ConsoleUI/bin/Debug
 /ConsoleUI/obj/Debug
+/BLL/bin/Release
+/BLL/obj/Release
+/ConsoleUI/obj/Release
+/LieDetector/bin/Release
+/LieDetector/obj/Release
