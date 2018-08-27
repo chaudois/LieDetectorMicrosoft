@@ -17,18 +17,14 @@ namespace ConsoleUI
         }
         static void Main(string[] args)
         {
-            
 
-            IObserver observerSplitter, observerFaceReco;
+
             IUnityContainer unity = UnityConfig.Setup();
             var videoSplitter = unity.Resolve<IVideoSplitter>();
 
-            observerSplitter = new GenericObserver();
-            observerFaceReco = new GenericObserver();
-            videoSplitter.AddObserverToExtractor(ref observerSplitter);
-            videoSplitter.AddObserverToFaceReco(ref observerFaceReco);
             Print("fichiers analysé : ");
-            foreach (var item in videoSplitter.SplitAndFaceRecoAllVideoAsync(6))
+            string[] fichiers = videoSplitter.SplitAndFaceRecoAllVideoAsync().ToArray();
+            foreach (var item in fichiers)
             {
                 Print(item);
             }
@@ -37,12 +33,17 @@ namespace ConsoleUI
                 try
                 {
                     Console.Clear();
-                    Console.WriteLine("Split : ");
-                    int nbImage = int.Parse(observerSplitter.GetReport().Split('/')[1]);
-                    Print(observerSplitter.GetReport());
-                    Console.WriteLine("FaceReco : ");
-                    Print(observerFaceReco.GetNotificationCount() + "/" + nbImage);
-                    Thread.Sleep(100);
+                    foreach (var fichier in fichiers)
+                    {
+
+                        Print(fichier);
+                        Console.Write("Split : ");
+                        int nbImage = int.Parse(videoSplitter.GetSplitProgressReport(fichier).GetReport().Split('/')[1]);
+                        Print(videoSplitter.GetSplitProgressReport(fichier).GetReport());
+                        Console.Write("FaceReco : ");
+                        Print(videoSplitter.GetFaceRecoProgressReport(fichier).GetNotificationCount() + "/" + nbImage);
+                        Thread.Sleep(500);
+                    }
                 }
                 catch (Exception)
                 {

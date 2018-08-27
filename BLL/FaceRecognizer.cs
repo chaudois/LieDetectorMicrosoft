@@ -4,31 +4,34 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BLL.Interfaces;
-using BLL.Models;
 using Emgu.CV;
 using Emgu.CV.Structure;
 using Newtonsoft.Json;
-
 namespace BLL
 {
-    public class FaceRecognizer : IFaceRecognizer
+    internal class FaceRecognizer : IFaceRecognizer
     {
-        private List<IObserver> middleWares;
-        const string XML_LOCATION = @"C:\Users\damien.chaudois\Documents\Projets\LieDetector\LieDetector\Ressources\xml\haarcascade_frontalface_alt_tree.xml";
+        private Observer observer { get; set; }
         ConcurrentQueue<string> pictureStack;
         bool pause, stop;
         int isRunning;
+        public int maxSimultaneousTask { get; set; }
         List<Task> tasks;
         public FaceRecognizer()
         {
+
+
+
             tasks = new List<Task>();
             pictureStack = new ConcurrentQueue<string>();
-            middleWares = new List<IObserver>();
+            observer = new Observer();
             isRunning = 0;
+            maxSimultaneousTask = 6;
         }
         /// <summary>
         /// pause all Tasks
@@ -40,23 +43,18 @@ namespace BLL
         /// <summary>
         /// finish all task, reset all properties
         /// </summary>
-        public void Stop()
+        public void StopAll()
         {
             stop = true;
-            foreach (var middleWare in middleWares)
-            {
-                middleWare.Reset();
-            }
+            observer.Reset();
+
             pictureStack = new ConcurrentQueue<string>();
+
         }
-        public void addObserver(ref IObserver middleWare)
-        {
-            middleWares.Add(middleWare);
-        }
-        public void FaceReco(string filePath, string saveDirectory)
+        public void FaceRecoFromQueue(string videoName, string saveDirectory)
         {
             string VideoName = "";
-            while (pictureStack.Count() > 0 && !stop)
+            while (pictureStack.Count() > 0 && !stop && isRunning <= maxSimultaneousTask)
             {
                 while (pause)
                 {
@@ -83,12 +81,16 @@ namespace BLL
 
                             try
                             {
-
+                                Rectangle[] faces;
                                 //c'est sur cette ligne que ce fait la reconnaissance facial
-                                Rectangle[] faces = new CascadeClassifier(XML_LOCATION).DetectMultiScale(normalizedMasterImage,
-                                    1.05,
-                                    10,
-                                    Size.Empty);
+                                using (var cascadeClassifier = new CascadeClassifier(Properties.Resources.xml))
+                                {
+                                    faces = cascadeClassifier.DetectMultiScale(normalizedMasterImage,
+                                       1.05,
+                                       -1,
+                                       Size.Empty);
+
+                                }
                                 foreach (var face in faces)
                                 {
 
@@ -117,43 +119,43 @@ namespace BLL
 
 
                                 }
-
-
-
-                                foreach (var middleWare in middleWares)
-                                {
-                                    string message = pathPicture + "_" + JsonConvert.SerializeObject(faces) + "_";
-                                    middleWare.Notify(message);
-                                }
+                                string message = pathPicture + "_" + JsonConvert.SerializeObject(faces) + "_";
+                                observer.Notify(message);
                             }
                             catch (Exception e)
                             {
                                 Console.WriteLine(e.Message);
                             }
-
                         }
                     }
                 }
             }
             isRunning--;
 
+
         }
-
-
-        public void FaceRecoAsync(string filePath, string saveDirectory, int maxSimultaneousTask)
+        public void FaceRecoAsync(string filePath, string saveDirectory)
         {
+            string videoName = filePath.Split('\\')[filePath.Split('\\').Length - 2];
             pictureStack.Enqueue(filePath);
-            isRunning++;
+
+
             if (isRunning < maxSimultaneousTask)
             {
-                tasks.Add( new Task(() =>
-                     FaceReco(filePath, saveDirectory)
-                     ));
+                isRunning++;
+                tasks.Add(new Task(() =>
+                {
+                    FaceRecoFromQueue(videoName, saveDirectory);
+                }));
                 stop = false;
                 tasks.Last().Start();
 
             }
         }
 
+        public Observer GetReport()
+        {
+            return observer;
+        }
     }
 }

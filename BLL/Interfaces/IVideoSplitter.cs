@@ -6,17 +6,16 @@ using System.Text;
 
 namespace BLL.Interfaces
 {
-    public interface IVideoSplitter
+    public interface IVideoSplitter 
     {
         /// <summary>
         /// summon the IVideoProvider given in the constructor to get a list of file from which extract faces
         /// </summary>
         /// <returns>array of string containing the full path of each chosen files by the user</returns>
-        List<string>  SplitAndFaceRecoAllVideoAsync( int simultaneousTask);
-
+        List<string>  SplitAndFaceRecoAllVideoAsync(IVideoProvider videoProvider = null);
+        Observer GetSplitProgressReport(string fileName);
+        Observer GetFaceRecoProgressReport(string fileName);
         bool IsFinished();
-        void AddObserverToExtractor(ref IObserver middleWare);
-        void AddObserverToFaceReco(ref IObserver middleWare);
         void Pause();
         void Stop();
     }

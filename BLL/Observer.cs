@@ -4,15 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BLL.Interfaces;
-using BLL.Models;
 
 namespace BLL
 {
-    public class GenericObserver : IObserver
+    public class Observer 
     {
         string rapport;
         int notificationCount;
-        public GenericObserver()
+        public Observer()
         {
             notificationCount = 0;
         }

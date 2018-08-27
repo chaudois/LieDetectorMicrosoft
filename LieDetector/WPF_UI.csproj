@@ -170,9 +170,6 @@
     <Resource Include="License-LGPL.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Ressources\xml\haarcascade_frontalface_alt_tree.xml" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Image1.png" />
   </ItemGroup>
   <ItemGroup>

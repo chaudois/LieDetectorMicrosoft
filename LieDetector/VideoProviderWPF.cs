@@ -15,6 +15,7 @@ namespace LieDetector
         public List<string> GetFiles()
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Multiselect = true;
             openFileDialog.ShowDialog();
             return openFileDialog.FileNames.ToList();
         }
