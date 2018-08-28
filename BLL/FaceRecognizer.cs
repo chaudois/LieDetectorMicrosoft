@@ -22,16 +22,19 @@ namespace BLL
         int isRunning;
         public int maxSimultaneousTask { get; set; }
         List<Task> tasks;
+        private Dictionary<string, CascadeClassifier> haarcascade_frontalface_alt_tree;
+        private bool extractionIsOver;
+
         public FaceRecognizer()
         {
 
 
-
+            haarcascade_frontalface_alt_tree = new Dictionary<string, CascadeClassifier>();
             tasks = new List<Task>();
             pictureStack = new ConcurrentQueue<string>();
             observer = new Observer();
             isRunning = 0;
-            maxSimultaneousTask = 12;
+            maxSimultaneousTask = 18;
         }
         /// <summary>
         /// pause all Tasks
@@ -55,10 +58,12 @@ namespace BLL
         /// dequeue la queue, traite l'image avec emgu.cv en notifiant l'observer du resultat
         /// </summary>
         /// <param name="saveDirectory">dossier ou enregistrer l'image après avoir detecter un rectangle de visage</param>
-        private void FaceRecoFromQueue(string saveDirectory)
+        private void FaceRecoFromQueue(string TaskNumber, string saveDirectory)
         {
             string VideoName = "";
-            while (pictureStack.Count() > 0 && !stop && isRunning <= maxSimultaneousTask)
+
+
+            while (!stop && !extractionIsOver)
             {
                 while (pause)
                 {
@@ -89,53 +94,13 @@ namespace BLL
                                 Rectangle[] faces;
                                 string foundWith = "";
                                 //c'est sur ce block que ce fait la reconnaissance facial
-                                using (var cascadeClassifier = new CascadeClassifier("xml/haarcascade_frontalface_alt_tree.xml"))
-                                {
-                                    faces = cascadeClassifier.DetectMultiScale(normalizedMasterImage,
-                                       1.05,
-                                       -1,
-                                       Size.Empty);
-                                    foundWith = "haarcascade_frontalface_alt_tree";
+                                faces = haarcascade_frontalface_alt_tree[TaskNumber].DetectMultiScale(normalizedMasterImage,
+                                   1.05,
+                                   -1,
+                                   Size.Empty);
+                                foundWith = "haarcascade_frontalface_alt_tree";
 
-                                }
-                                if (faces.Count() == 0)
-                                {
-                                    using (var cascadeClassifier = new CascadeClassifier("xml/haarcascade_frontalface_alt.xml"))
-                                    {
-                                        faces = cascadeClassifier.DetectMultiScale(normalizedMasterImage,
-                                           1.05,
-                                           -1,
-                                           Size.Empty);
-                                        foundWith = "haarcascade_frontalface_alt";
 
-                                    }
-                                }
-                                if (faces.Count() == 0)
-                                {
-                                    using (var cascadeClassifier = new CascadeClassifier("xml/haarcascade_frontalface_alt2.xml"))
-                                    {
-                                        faces = cascadeClassifier.DetectMultiScale(normalizedMasterImage,
-                                           1.05,
-                                           -1,
-                                           Size.Empty);
-
-                                    }
-                                    foundWith = "haarcascade_frontalface_alt2";
-
-                                }
-                                if (faces.Count() == 0)
-                                {
-                                    using (var cascadeClassifier = new CascadeClassifier("xml/haarcascade_frontalface_default.xml"))
-                                    {
-                                        faces = cascadeClassifier.DetectMultiScale(normalizedMasterImage,
-                                           1.05,
-                                           -1,
-                                           Size.Empty);
-
-                                    }
-                                    foundWith = "haarcascade_frontalface_default";
-
-                                }
                                 foreach (var face in faces)
                                 {
 
@@ -162,21 +127,22 @@ namespace BLL
                                         Console.WriteLine(e.Message);
                                     }
 
-
                                 }
-                                string message = pathPicture + "&" + JsonConvert.SerializeObject(faces) + "&"+foundWith;
+                                string message = pathPicture + "&" + JsonConvert.SerializeObject(faces) + "&" + foundWith;
                                 observer.Notify(message);
-
                             }
                         }
+
                     }
                     catch (Exception e)
                     {
                         Console.Error.WriteLine("Erreur dans FaceRecognizer.FaceRecoFromQueue(string saveDirectory) : " + e.Message);
                     }
+
                 }
             }
-            isRunning--;
+            haarcascade_frontalface_alt_tree.Remove(TaskNumber);
+
 
 
         }
@@ -188,12 +154,19 @@ namespace BLL
             if (isRunning < maxSimultaneousTask)
             {
                 isRunning++;
-                tasks.Add(new Task(() =>
+                if (!File.Exists(saveDirectory + "/xml/haarcascade_frontalface_alt_tree_" + isRunning + ".xml"))
                 {
-                    FaceRecoFromQueue(saveDirectory);
-                }));
+                    File.Copy(saveDirectory + "/xml/haarcascade_frontalface_alt_tree.xml", saveDirectory + "/xml/haarcascade_frontalface_alt_tree_" + isRunning + ".xml");
+
+                }
+                haarcascade_frontalface_alt_tree.Add(isRunning.ToString(), new CascadeClassifier(saveDirectory + "/xml/haarcascade_frontalface_alt_tree_" + isRunning + ".xml"));
+                Task.Run(() =>
+                {
+                    FaceRecoFromQueue(isRunning.ToString(), saveDirectory);
+                    isRunning--;
+
+                });
                 stop = false;
-                tasks.Last().Start();
 
             }
         }
@@ -201,6 +174,11 @@ namespace BLL
         public Observer GetReport()
         {
             return observer;
+        }
+
+        public void ExtractionIsOver()
+        {
+            extractionIsOver = true;
         }
     }
 }

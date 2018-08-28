@@ -16,6 +16,7 @@ namespace BLL.Interfaces
         void FaceRecoAsync(string filePath,string saveDirectory);
         void Pause();
         void StopAll();
+        void ExtractionIsOver();
         Observer GetReport();
     }
 }

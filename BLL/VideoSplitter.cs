@@ -101,6 +101,7 @@ namespace BLL
                     }
                 }
                 finished = true;
+                _faceRecognizer[videoLocation].ExtractionIsOver();
             }
 
         }

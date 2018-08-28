@@ -202,11 +202,18 @@ namespace LieDetector
         private void BoutonDeleteResultFaceReco_Click(object sender, RoutedEventArgs e)
         {
             string fileName = filesPath[0].Remove(0, filesPath[0].LastIndexOf("\\") + 1).Split('.')[0];
-            BoutonOpenFaces.IsEnabled = false;
-            BoutonDeleteResultFaceReco.IsEnabled = false;
-            if (Directory.Exists(execDirecory + "/resultat/visages/" + fileName))
+            try
             {
-                Directory.Delete(execDirecory + "/resultat/visages/" + fileName, true);
+
+                if (Directory.Exists(execDirecory + "/resultat/visages/" + fileName))
+                {
+                    Directory.Delete(execDirecory + "/resultat/visages/" + fileName, true);
+                }
+                BoutonOpenFaces.IsEnabled = false;
+                BoutonDeleteResultFaceReco.IsEnabled = false;
+            }
+            catch (Exception)
+            {
             }
         }
         private void BoutonDeleteResultFragmentation_Click(object sender, RoutedEventArgs e)
