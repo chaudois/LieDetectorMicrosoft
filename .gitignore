@@ -19,3 +19,5 @@
 /ConsoleUI/obj/Release
 /LieDetector/bin/Release
 /LieDetector/obj/Release
+/TestLieDetector/bin/Debug
+/TestLieDetector/obj/Debug

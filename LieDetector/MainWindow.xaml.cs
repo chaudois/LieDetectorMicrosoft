@@ -13,6 +13,7 @@ using System.Drawing;
 using Newtonsoft.Json;
 using System.Windows.Media.Imaging;
 using System.Drawing.Imaging;
+using Accord.Video.FFMPEG;
 
 namespace LieDetector
 {
@@ -20,18 +21,19 @@ namespace LieDetector
     public partial class MainWindow : Window
     {
 
-        IVideoSplitter videoSplitter;
+        FaceRecognizer faceRecognizer;
         System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
-        int nbImage;
-        bool paused;
+        long nbImage;
         string[] filesPath;
         string execDirecory;
+        VideoFileReader reader;
+        int cptVideo = 0;
         public MainWindow()
         {
             execDirecory = Assembly.GetEntryAssembly().Location.Remove(Assembly.GetEntryAssembly().Location.LastIndexOf('\\'));
-            var unity = UnityConfig.Setup();
-            videoSplitter = unity.Resolve<IVideoSplitter>();
+            faceRecognizer = new FaceRecognizer();
             Thread.CurrentThread.Name = "Main";
+            reader = new VideoFileReader();
             timer.Tick += tick;
             InitializeComponent();
         }
@@ -47,76 +49,64 @@ namespace LieDetector
 
             return bitmapImage;
         }
+        private Bitmap DrawRectangleOnBmp(Rectangle face, Bitmap picture,Color couleur)
+        {
+            using (Graphics g = Graphics.FromImage(picture))
+            {
+                Pen p = new Pen(couleur, (float)10.0);
+
+                if (p != null)
+                {
+
+                    //dessine le rectangle ou se trouve le visage sur l'image
+                    g.DrawLine(p,
+                            new System.Drawing.Point(face.X, face.Y),
+                            new System.Drawing.Point(face.X, face.Y + face.Height));
+                    g.DrawLine(p,
+                            new System.Drawing.Point(face.X, face.Y + face.Height),
+                            new System.Drawing.Point(face.X + face.Width, face.Y + face.Height));
+                    g.DrawLine(p,
+                            new System.Drawing.Point(face.X + face.Width, face.Y + face.Height),
+                            new System.Drawing.Point(face.X + face.Width, face.Y));
+                    g.DrawLine(p,
+                            new System.Drawing.Point(face.X, face.Y),
+                            new System.Drawing.Point(face.X + face.Width, face.Y));
+                }
+            }
+            return picture;
+        }
         private void tick(object sender, EventArgs e)
         {
             try
             {
                 nomDuFichier.Content = filesPath[0].Split('\\')[filesPath[0].Split('\\').Length - 1];
-                BoutonVideo.IsEnabled = videoSplitter.IsFinished();
-                nbImage = int.Parse(videoSplitter.GetSplitProgressReport(filesPath[0]).GetReport().Split('/')[1]);
+                BoutonVideo.IsEnabled = faceRecognizer.busy;
+                nbImage = faceRecognizer.observer.frameCount;
 
                 progressFractionnage.Maximum = nbImage;
-                progressFaceReco.Maximum = nbImage;
 
-                progressFractionnage.Value = videoSplitter.GetSplitProgressReport(filesPath[0]).GetNotificationCount();
-                progressFaceReco.Value = videoSplitter.GetFaceRecoProgressReport(filesPath[0]).GetNotificationCount();
+                progressFractionnage.Value = faceRecognizer.observer.GetNotificationCount();
 
-                labelAvancementFragmentation.Content = videoSplitter.GetSplitProgressReport(filesPath[0]).GetReport();
-                labelAvancementFaceReco.Content = videoSplitter.GetFaceRecoProgressReport(filesPath[0]).GetNotificationCount() + "/" + nbImage;
+                labelAvancementFragmentation.Content = faceRecognizer.observer.GetNotificationCount() + "/" + faceRecognizer.observer.frameCount;
 
-                string message = videoSplitter.GetFaceRecoProgressReport(filesPath[0]).GetReport();
-                if (message != null)
+                KeyValuePair<int, string>? progress = faceRecognizer.observer.GetReport();
+
+                if (progress != null && progress.Value.Key > 0)
                 {
-                    string[] result = message.Split('&');
-                    //si l'observeur rapporte une image traité
-                    if (result[0] != null && result[0] != "")
+                    Bitmap bitmap = null;
+                    while (progress.Value.Key > cptVideo)
                     {
-                        //creer une image
-                        Bitmap currentPicture = new Bitmap(result[0]);
-                        //si l'observeur a trouver un visage
-                        if (result[1] != null && result[1] != "[]")
-                        {
-                            Rectangle[] faces = JsonConvert.DeserializeObject<Rectangle[]>(result[1]);
-                            using (Graphics g = Graphics.FromImage(currentPicture))
-                            {
-                                Pen p = null;
-                                switch (result[2])
-                                {
-                                    case "haarcascade_frontalface_alt_tree":
-                                        p = new Pen(Color.Red, (float)10.0);
-                                        break;
-                                    case "haarcascade_frontalface_alt":
-                                        p = new Pen(Color.Blue, (float)10.0);
-                                        break;
-                                    case "haarcascade_frontalface_alt2":
-                                        p = new Pen(Color.Green, (float)10.0);
-                                        break;
-                                    case "haarcascade_frontalface_default":
-                                        p = new Pen(Color.Yellow, (float)10.0);
-                                        break;
-
-                                }
-                                if (p != null)
-                                {
-
-                                    //dessine le rectangle ou se trouve le visage sur l'image
-                                    g.DrawLine(p,
-                                            new System.Drawing.Point(faces[0].X, faces[0].Y),
-                                            new System.Drawing.Point(faces[0].X, faces[0].Y + faces[0].Height));
-                                    g.DrawLine(p,
-                                            new System.Drawing.Point(faces[0].X, faces[0].Y + faces[0].Height),
-                                            new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y + faces[0].Height));
-                                    g.DrawLine(p,
-                                            new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y + faces[0].Height),
-                                            new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y));
-                                    g.DrawLine(p,
-                                            new System.Drawing.Point(faces[0].X, faces[0].Y),
-                                            new System.Drawing.Point(faces[0].X + faces[0].Width, faces[0].Y));
-                                }
-                            }
-                        }
-                        //affiche l'image avec le rectangle si il y en a un à l'utilisateur
-                        pictureBox1.Source = ConverBitmapToBitmapImage(currentPicture);//merci stackOverflow
+                        bitmap = reader.ReadVideoFrame();
+                        cptVideo++;
+                    }
+                    if (bitmap != null)
+                    {
+                        Rectangle[] face = JsonConvert.DeserializeObject<Rectangle[]>(JsonConvert.DeserializeObject<dynamic>(progress.Value.Value).faces.ToString());
+                        Rectangle[] eyes = JsonConvert.DeserializeObject<Rectangle[]>(JsonConvert.DeserializeObject<dynamic>(progress.Value.Value).eyes.ToString());
+                        Bitmap pictureSource = DrawRectangleOnBmp(face[0], bitmap,Color.Red);
+                        pictureSource = DrawRectangleOnBmp(eyes[0], bitmap,Color.Yellow);
+                        pictureSource = DrawRectangleOnBmp(eyes[1], bitmap,Color.Yellow);
+                        pictureBox1.Source = ConverBitmapToBitmapImage(pictureSource);
                     }
                 }
 
@@ -124,29 +114,22 @@ namespace LieDetector
             catch (Exception ex)
             {
                 Console.Error.WriteLine(ex.Message);
-                int i = 0;
-
-
             }
 
 
         }
         private void ButtonVideo_Click(object sender, RoutedEventArgs e)
         {
-            videoSplitter.Stop();
 
             try
             {
-
-                filesPath = videoSplitter.SplitAndFaceRecoAllVideoAsync().ToArray();
-                BoutonOpenImages.IsEnabled = true;
-                BoutonOpenFaces.IsEnabled = true;
-                BoutonPause.IsEnabled = true;
-                BoutonCancel.IsEnabled = true;
-                BoutonDeleteResultFractionnage.IsEnabled = false;
-                BoutonDeleteResultFaceReco.IsEnabled = false;
+                filesPath = new string[]
+                {
+                    "C:\\Users\\d.chaudois\\Videos\\VideoHololLens\\20180724-115023-HoloLens-Verite.mp4"
+                };
+                reader.Open(filesPath[0]);
+                faceRecognizer.AnalyzeVideo(filesPath[0], execDirecory);
                 progressFractionnage.Foreground = System.Windows.Media.Brushes.Green;
-                progressFaceReco.Foreground = System.Windows.Media.Brushes.Green;
 
                 timer.Start();
             }
@@ -156,75 +139,6 @@ namespace LieDetector
             }
 
 
-        }
-        private void ButtonDisaplayFragmentation_Click(object sender, RoutedEventArgs e)
-        {
-            string execDirecory = Assembly.GetEntryAssembly().Location.Remove(Assembly.GetEntryAssembly().Location.LastIndexOf('\\'));
-
-            string fileName = filesPath[0].Remove(0, filesPath[0].LastIndexOf("\\") + 1).Split('.')[0];
-            if (Directory.Exists(execDirecory + "/resultat/fragmentation/" + fileName))
-                Process.Start(execDirecory + "/resultat/fragmentation/" + fileName);
-        }
-        private void ButtonDisplayImageFaceReco_Click(object sender, RoutedEventArgs e)
-        {
-
-            string fileName = filesPath[0].Remove(0, filesPath[0].LastIndexOf("\\") + 1).Split('.')[0];
-            if (Directory.Exists(execDirecory + "/resultat/visages/" + fileName))
-                Process.Start(execDirecory + "/resultat/visages/" + fileName);
-        }
-        private void ButtonStop_Click(object sender, RoutedEventArgs e)
-        {
-            timer.Stop();
-            videoSplitter.Stop();
-
-            if (!videoSplitter.IsFinished())
-            {
-                progressFractionnage.Foreground = System.Windows.Media.Brushes.DarkRed;
-                progressFaceReco.Foreground = System.Windows.Media.Brushes.DarkRed;
-            }
-            BoutonDeleteResultFractionnage.IsEnabled = true;
-            BoutonDeleteResultFaceReco.IsEnabled = true;
-            BoutonVideo.IsEnabled = true;
-        }
-        private void BoutonPause_Click(object sender, RoutedEventArgs e)
-        {
-            videoSplitter.Pause();
-            paused = !paused;
-            if (paused)
-            {
-                imagePause.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri("pack://application:,,,/Ressources/Images/play.png"));
-            }
-            else
-            {
-                imagePause.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri("pack://application:,,,/Ressources/Images/pause.png"));
-            }
-        }
-        private void BoutonDeleteResultFaceReco_Click(object sender, RoutedEventArgs e)
-        {
-            string fileName = filesPath[0].Remove(0, filesPath[0].LastIndexOf("\\") + 1).Split('.')[0];
-            try
-            {
-
-                if (Directory.Exists(execDirecory + "/resultat/visages/" + fileName))
-                {
-                    Directory.Delete(execDirecory + "/resultat/visages/" + fileName, true);
-                }
-                BoutonOpenFaces.IsEnabled = false;
-                BoutonDeleteResultFaceReco.IsEnabled = false;
-            }
-            catch (Exception)
-            {
-            }
-        }
-        private void BoutonDeleteResultFragmentation_Click(object sender, RoutedEventArgs e)
-        {
-            string fileName = filesPath[0].Remove(0, filesPath[0].LastIndexOf("\\") + 1).Split('.')[0];
-            BoutonOpenImages.IsEnabled = false;
-            BoutonDeleteResultFractionnage.IsEnabled = false;
-            if (Directory.Exists(execDirecory + "/resultat/fragmentation/" + fileName))
-            {
-                Directory.Delete(execDirecory + "/resultat/fragmentation/" + fileName, true);
-            }
         }
 
 
