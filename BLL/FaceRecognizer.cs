@@ -18,20 +18,17 @@ namespace BLL
     {
         public Observer observer { get; set; }
         public bool busy { get; private set; }
+        CascadeClassifier haarcascade_frontalface_alt_tree;
+        CascadeClassifier haarcascade_eye;
+
         public FaceRecognizer()
         {
             observer = new Observer();
             busy = false;
+            haarcascade_frontalface_alt_tree = new CascadeClassifier("xml/haarcascade_frontalface_alt_tree.xml");
+            haarcascade_eye = new CascadeClassifier("xml/haarcascade_eye.xml");
         }
-        private CascadeClassifier GetCascadeClassifier(string videoName, string haarcascadeType, string saveDirectory)
-        {
-            if (!File.Exists(saveDirectory + "/xml/" + haarcascadeType + "_" + videoName + ".xml"))
-            {
-                File.Copy(saveDirectory + "/xml/" + haarcascadeType + ".xml", saveDirectory + "/xml/" + haarcascadeType + "_" + videoName + ".xml");
-
-            }
-            return new CascadeClassifier(saveDirectory + "/xml/" + haarcascadeType + "_" + videoName + ".xml");
-        }
+        
         public void AnalyzeVideo(string videoPath, string saveDirectory = null)
         {
             Task.Run(() =>
@@ -54,8 +51,6 @@ namespace BLL
                         Bitmap videoFrame = reader.ReadVideoFrame();
 
 
-                        CascadeClassifier haarcascade_frontalface_alt_tree = GetCascadeClassifier(videoName, "haarcascade_frontalface_alt_tree", saveDirectory);
-                        CascadeClassifier haarcascade_eye = GetCascadeClassifier(videoName, "haarcascade_eye", saveDirectory);
                         int frameNumber = 1;
                         while (videoFrame != null)
                         {
@@ -63,9 +58,37 @@ namespace BLL
                             {
 
                                 //c'est sur ce block que ce fait la reconnaissance facial
-                                Rectangle[] faces = FindRectangles(videoFrame, haarcascade_frontalface_alt_tree);
-                                Rectangle[] eyes = FindRectangles(videoFrame, haarcascade_eye);
-                                var notification = JsonConvert.SerializeObject(new
+                                Rectangle[] faces = FindFaces(videoFrame);
+                                Rectangle[] eyes = null;
+                                string notification = "";
+                                try
+                                {
+
+                                    using (Bitmap target = new Bitmap(faces[0].Width, faces[0].Height))
+                                    {
+                                        using (Graphics g = Graphics.FromImage(target))
+                                        {
+                                            g.DrawImage(videoFrame, new Rectangle(0, 0, target.Width, target.Height),
+                                                             faces[0],
+                                                             GraphicsUnit.Pixel);
+                                        }
+                                        eyes = FindEyes(target);
+                                        if (eyes != null)
+                                        {
+                                            for (int i = 0; i < eyes.Length; i++)
+                                            {
+                                                eyes[i].X += faces[0].X;
+                                                eyes[i].Y += faces[0].Y;
+                                            }
+
+                                        }
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.Error.WriteLine("erreur dans  AnalyseVideoAsync : " + e.Message);
+                                }
+                                notification = JsonConvert.SerializeObject(new
                                 {
 
                                     faces,
@@ -90,16 +113,30 @@ namespace BLL
         }
 
 
-        private Rectangle[] FindRectangles(Bitmap videoFrame, CascadeClassifier haarcascade)
+        private Rectangle[] FindFaces(Bitmap videoFrame )
         {
             using (Image<Gray, Byte> normalizedMasterImage = new Image<Gray, Byte>(videoFrame))
             {
 
                 //c'est sur ce block que ce fait la reconnaissance facial
-                return haarcascade.
+                return haarcascade_frontalface_alt_tree.
                      DetectMultiScale(
                      normalizedMasterImage,
-                     1.05,
+                     1.1,
+                     -1,
+                     Size.Empty);
+            }
+        }
+        private Rectangle[] FindEyes(Bitmap videoFrame )
+        {
+            using (Image<Gray, Byte> normalizedMasterImage = new Image<Gray, Byte>(videoFrame))
+            {
+
+                //c'est sur ce block que ce fait la reconnaissance facial
+                return haarcascade_eye.
+                     DetectMultiScale(
+                     normalizedMasterImage,
+                     1.1,
                      -1,
                      Size.Empty);
             }

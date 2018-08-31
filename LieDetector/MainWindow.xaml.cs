@@ -34,6 +34,7 @@ namespace LieDetector
             faceRecognizer = new FaceRecognizer();
             Thread.CurrentThread.Name = "Main";
             reader = new VideoFileReader();
+            timer.Interval = 1;
             timer.Tick += tick;
             InitializeComponent();
         }
@@ -49,29 +50,37 @@ namespace LieDetector
 
             return bitmapImage;
         }
-        private Bitmap DrawRectangleOnBmp(Rectangle face, Bitmap picture,Color couleur)
+        private Bitmap DrawRectangleOnBmp(Rectangle[] faces, Bitmap picture, Color couleur, int rectangleAmount)
         {
-            using (Graphics g = Graphics.FromImage(picture))
+            for (int i = 0; i < rectangleAmount; i++)
             {
-                Pen p = new Pen(couleur, (float)10.0);
-
-                if (p != null)
+                if (faces.Length - 1 >= i)
                 {
 
-                    //dessine le rectangle ou se trouve le visage sur l'image
-                    g.DrawLine(p,
-                            new System.Drawing.Point(face.X, face.Y),
-                            new System.Drawing.Point(face.X, face.Y + face.Height));
-                    g.DrawLine(p,
-                            new System.Drawing.Point(face.X, face.Y + face.Height),
-                            new System.Drawing.Point(face.X + face.Width, face.Y + face.Height));
-                    g.DrawLine(p,
-                            new System.Drawing.Point(face.X + face.Width, face.Y + face.Height),
-                            new System.Drawing.Point(face.X + face.Width, face.Y));
-                    g.DrawLine(p,
-                            new System.Drawing.Point(face.X, face.Y),
-                            new System.Drawing.Point(face.X + face.Width, face.Y));
+                    using (Graphics g = Graphics.FromImage(picture))
+                    {
+                        Pen p = new Pen(couleur, (float)2.0);
+
+                        if (p != null)
+                        {
+
+                            //dessine le rectangle ou se trouve le visage sur l'image
+                            g.DrawLine(p,
+                                    new System.Drawing.Point(faces[i].X, faces[i].Y),
+                                    new System.Drawing.Point(faces[i].X, faces[i].Y + faces[i].Height));
+                            g.DrawLine(p,
+                                    new System.Drawing.Point(faces[i].X, faces[i].Y + faces[i].Height),
+                                    new System.Drawing.Point(faces[i].X + faces[i].Width, faces[i].Y + faces[i].Height));
+                            g.DrawLine(p,
+                                    new System.Drawing.Point(faces[i].X + faces[i].Width, faces[i].Y + faces[i].Height),
+                                    new System.Drawing.Point(faces[i].X + faces[i].Width, faces[i].Y));
+                            g.DrawLine(p,
+                                    new System.Drawing.Point(faces[i].X, faces[i].Y),
+                                    new System.Drawing.Point(faces[i].X + faces[i].Width, faces[i].Y));
+                        }
+                    }
                 }
+
             }
             return picture;
         }
@@ -85,9 +94,9 @@ namespace LieDetector
 
                 progressFractionnage.Maximum = nbImage;
 
-                progressFractionnage.Value = faceRecognizer.observer.GetNotificationCount();
+                progressFractionnage.Value = cptVideo;
 
-                labelAvancementFragmentation.Content = faceRecognizer.observer.GetNotificationCount() + "/" + faceRecognizer.observer.frameCount;
+                labelAvancementFragmentation.Content = cptVideo + "/" + faceRecognizer.observer.frameCount;
 
                 KeyValuePair<int, string>? progress = faceRecognizer.observer.GetReport();
 
@@ -103,12 +112,20 @@ namespace LieDetector
                     {
                         Rectangle[] face = JsonConvert.DeserializeObject<Rectangle[]>(JsonConvert.DeserializeObject<dynamic>(progress.Value.Value).faces.ToString());
                         Rectangle[] eyes = JsonConvert.DeserializeObject<Rectangle[]>(JsonConvert.DeserializeObject<dynamic>(progress.Value.Value).eyes.ToString());
-                        Bitmap pictureSource = DrawRectangleOnBmp(face[0], bitmap,Color.Red);
-                        pictureSource = DrawRectangleOnBmp(eyes[0], bitmap,Color.Yellow);
-                        pictureSource = DrawRectangleOnBmp(eyes[1], bitmap,Color.Yellow);
-                        pictureBox1.Source = ConverBitmapToBitmapImage(pictureSource);
+                        if (face.Count() > 0)
+                        {
+                            bitmap = DrawRectangleOnBmp(face, bitmap, Color.Red, 3);
+
+                            if (eyes.Length > 1)
+                            {
+
+                                bitmap = DrawRectangleOnBmp(eyes, bitmap, Color.Yellow, 2);
+                                bitmap = DrawRectangleOnBmp(eyes, bitmap, Color.Yellow, 2);
+                            }
+                        } 
+                        pictureBox1.Source = ConverBitmapToBitmapImage(bitmap);
                     }
-                }
+                } 
 
             }
             catch (Exception ex)
