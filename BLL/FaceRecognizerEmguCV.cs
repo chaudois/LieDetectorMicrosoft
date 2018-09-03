@@ -14,14 +14,14 @@ using System.Threading.Tasks;
 
 namespace BLL
 {
-    public class FaceRecognizer
+    public class FaceRecognizerEmguCV : IFaceRecognizer
     {
         public Observer observer { get; set; }
         public bool busy { get; private set; }
         CascadeClassifier haarcascade_frontalface_alt_tree;
         CascadeClassifier haarcascade_eye;
 
-        public FaceRecognizer()
+        public FaceRecognizerEmguCV()
         {
             observer = new Observer();
             busy = false;
@@ -29,7 +29,7 @@ namespace BLL
             haarcascade_eye = new CascadeClassifier("xml/haarcascade_eye.xml");
         }
         
-        public void AnalyzeVideo(string videoPath, string saveDirectory = null)
+        public async Task AnalyzeVideo(string videoPath, string saveDirectory = null)
         {
             Task.Run(() =>
             {
@@ -101,8 +101,7 @@ namespace BLL
                         }
                         videoFrame.Dispose();
                         reader.Dispose();
-                        haarcascade_frontalface_alt_tree.Dispose();
-                    }
+                     }
                     catch (Exception e)
                     {
                         Console.Error.WriteLine("erreur dans  AnalyseVideoAsync : " + e.Message);
@@ -141,6 +140,7 @@ namespace BLL
                      Size.Empty);
             }
         }
-    }
+
+     }
 }
 

@@ -5,13 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LieDetector"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" ResizeMode="CanMinimize">
-    <Grid>
+        Title="MainWindow" Height="614" Width="844" ResizeMode="CanMinimize">
+    <Grid Margin="0,0,3.6,2.8">
         <Button x:Name="BoutonVideo" Content="Video..." HorizontalAlignment="Left" Margin="52,18,0,0" VerticalAlignment="Top" Width="130" Click="ButtonVideo_Click" Height="30" Background="#FFB4B4B4"/>
         <Image HorizontalAlignment="Left" Height="38" Margin="10,13,0,0" VerticalAlignment="Top" Width="37" RenderTransformOrigin="0.117,-1.808" Source="Ressources/Images/video-clip-icone.png"/>
         <ProgressBar x:Name="progressFractionnage" HorizontalAlignment="Left" Height="31" Margin="52,62,0,0" VerticalAlignment="Top" Width="130" SmallChange="1"/>
         <Image HorizontalAlignment="Left" Height="38" Margin="10,62,0,0" VerticalAlignment="Top" Width="37" RenderTransformOrigin="0.117,-1.808" Source="Ressources/Images/face.png"/>
-        <Image x:Name="pictureBox1" HorizontalAlignment="Left" Height="358" Margin="439,52,0,0" VerticalAlignment="Top" Width="345"/>
+        <Image x:Name="pictureBox1" HorizontalAlignment="Left" Height="468" Margin="10,105,0,0" VerticalAlignment="Top" Width="794"/>
         <Label x:Name="nomDuFichier" Content="" HorizontalAlignment="Left" Margin="579,10,0,0" VerticalAlignment="Top" Width="169" FontWeight="Bold" FontSize="20"/>
         <Label Name="labelAvancementFragmentation" Content="" HorizontalAlignment="Left" Margin="187,62,0,0" VerticalAlignment="Top" Height="29" Width="120"/>
 

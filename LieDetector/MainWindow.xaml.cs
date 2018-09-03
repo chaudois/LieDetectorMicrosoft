@@ -8,7 +8,7 @@ using System.Threading;
 using System.Reflection;
 using BLL;
 using Unity;
-using BLL.Interfaces;
+using BLL;
 using System.Drawing;
 using Newtonsoft.Json;
 using System.Windows.Media.Imaging;
@@ -21,7 +21,7 @@ namespace LieDetector
     public partial class MainWindow : Window
     {
 
-        FaceRecognizer faceRecognizer;
+        IFaceRecognizer faceRecognizer;
         System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
         long nbImage;
         string[] filesPath;
@@ -31,7 +31,7 @@ namespace LieDetector
         public MainWindow()
         {
             execDirecory = Assembly.GetEntryAssembly().Location.Remove(Assembly.GetEntryAssembly().Location.LastIndexOf('\\'));
-            faceRecognizer = new FaceRecognizer();
+            faceRecognizer = new FaceRecognizerEmguCV();
             Thread.CurrentThread.Name = "Main";
             reader = new VideoFileReader();
             timer.Interval = 1;
@@ -59,7 +59,7 @@ namespace LieDetector
 
                     using (Graphics g = Graphics.FromImage(picture))
                     {
-                        Pen p = new Pen(couleur, (float)2.0);
+                        Pen p = new Pen(couleur, (float)4.0);
 
                         if (p != null)
                         {
@@ -112,11 +112,11 @@ namespace LieDetector
                     {
                         Rectangle[] face = JsonConvert.DeserializeObject<Rectangle[]>(JsonConvert.DeserializeObject<dynamic>(progress.Value.Value).faces.ToString());
                         Rectangle[] eyes = JsonConvert.DeserializeObject<Rectangle[]>(JsonConvert.DeserializeObject<dynamic>(progress.Value.Value).eyes.ToString());
-                        if (face.Count() > 0)
+                        if (face!=null && face.Count() > 0)
                         {
-                            bitmap = DrawRectangleOnBmp(face, bitmap, Color.Red, 3);
+                            bitmap = DrawRectangleOnBmp(face, bitmap, Color.Red, 1);
 
-                            if (eyes.Length > 1)
+                            if (eyes != null && eyes.Length > 1)
                             {
 
                                 bitmap = DrawRectangleOnBmp(eyes, bitmap, Color.Yellow, 2);
