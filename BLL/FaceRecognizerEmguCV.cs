@@ -16,20 +16,29 @@ namespace BLL
 {
     public class FaceRecognizerEmguCV : IFaceRecognizer
     {
-        public Observer observer { get; set; }
         public bool busy { get; private set; }
+        public SortedList<int, string> orderedNotification { get; private set; }
+        public string progress { get; private set; }
+
         CascadeClassifier haarcascade_frontalface_alt_tree;
         CascadeClassifier haarcascade_eye;
 
         public FaceRecognizerEmguCV()
         {
-            observer = new Observer();
             busy = false;
+            orderedNotification = new SortedList<int, string>();
             haarcascade_frontalface_alt_tree = new CascadeClassifier("xml/haarcascade_frontalface_alt_tree.xml");
             haarcascade_eye = new CascadeClassifier("xml/haarcascade_eye.xml");
         }
-        
-        public async Task AnalyzeVideo(string videoPath, string saveDirectory = null)
+        public KeyValuePair<int, string>? GetReport()
+        {
+
+            if (orderedNotification == null || orderedNotification.Count() == 0) return null;
+            KeyValuePair<int, string> result = new KeyValuePair<int, string>(orderedNotification.ElementAt(0).Key, orderedNotification.ElementAt(0).Value);
+            orderedNotification.RemoveAt(0);
+            return result;
+        }
+        public void AnalyzeVideo(string videoPath, string saveDirectory = null)
         {
             Task.Run(() =>
             {
@@ -44,7 +53,6 @@ namespace BLL
                 using (VideoFileReader reader = new VideoFileReader())
                 {
                     reader.Open(videoPath);
-                    observer.frameCount = reader.FrameCount;
                     try
                     {
 
@@ -54,6 +62,7 @@ namespace BLL
                         int frameNumber = 1;
                         while (videoFrame != null)
                         {
+                            progress = frameNumber +"/"+ reader.FrameCount;
                             using (Image<Gray, Byte> normalizedMasterImage = new Image<Gray, Byte>(videoFrame))
                             {
 
@@ -94,14 +103,14 @@ namespace BLL
                                     faces,
                                     eyes
                                 });
-                                observer.Notify(frameNumber, notification);
+                                orderedNotification.Add(frameNumber, notification);
                             }
                             videoFrame = reader.ReadVideoFrame();
                             frameNumber++;
                         }
                         videoFrame.Dispose();
                         reader.Dispose();
-                     }
+                    }
                     catch (Exception e)
                     {
                         Console.Error.WriteLine("erreur dans  AnalyseVideoAsync : " + e.Message);
@@ -112,7 +121,7 @@ namespace BLL
         }
 
 
-        private Rectangle[] FindFaces(Bitmap videoFrame )
+        private Rectangle[] FindFaces(Bitmap videoFrame)
         {
             using (Image<Gray, Byte> normalizedMasterImage = new Image<Gray, Byte>(videoFrame))
             {
@@ -126,7 +135,7 @@ namespace BLL
                      Size.Empty);
             }
         }
-        private Rectangle[] FindEyes(Bitmap videoFrame )
+        private Rectangle[] FindEyes(Bitmap videoFrame)
         {
             using (Image<Gray, Byte> normalizedMasterImage = new Image<Gray, Byte>(videoFrame))
             {
@@ -141,6 +150,6 @@ namespace BLL
             }
         }
 
-     }
+    }
 }
 

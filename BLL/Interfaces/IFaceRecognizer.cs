@@ -1,12 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BLL
 {
     public interface IFaceRecognizer
     {
+ 
         bool busy { get; }
-        Observer observer { get; set; }
-
-        Task AnalyzeVideo(string videoPath, string saveDirectory = null);
+        string progress { get; }
+        KeyValuePair<int, string>? GetReport();
+        void AnalyzeVideo(string videoPath, string saveDirectory = null);
     }
 }

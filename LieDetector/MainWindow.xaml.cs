@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using System.Windows.Media.Imaging;
 using System.Drawing.Imaging;
 using Accord.Video.FFMPEG;
+using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 
 namespace LieDetector
 {
@@ -88,31 +89,58 @@ namespace LieDetector
         {
             try
             {
+
                 nomDuFichier.Content = filesPath[0].Split('\\')[filesPath[0].Split('\\').Length - 1];
                 BoutonVideo.IsEnabled = faceRecognizer.busy;
-                nbImage = faceRecognizer.observer.frameCount;
+
+                nbImage = long.Parse(faceRecognizer.progress.Split('/')[1]);
 
                 progressFractionnage.Maximum = nbImage;
 
                 progressFractionnage.Value = cptVideo;
 
-                labelAvancementFragmentation.Content = cptVideo + "/" + faceRecognizer.observer.frameCount;
+                labelAvancementFragmentation.Content = cptVideo + "/" + nbImage;
 
-                KeyValuePair<int, string>? progress = faceRecognizer.observer.GetReport();
-
-                if (progress != null && progress.Value.Key > 0)
+                var report = faceRecognizer.GetReport();
+                if (report != null && report.Value.Key > 0)
                 {
                     Bitmap bitmap = null;
-                    while (progress.Value.Key > cptVideo)
+                    while (report.Value.Key > cptVideo)
                     {
                         bitmap = reader.ReadVideoFrame();
                         cptVideo++;
                     }
                     if (bitmap != null)
                     {
-                        Rectangle[] face = JsonConvert.DeserializeObject<Rectangle[]>(JsonConvert.DeserializeObject<dynamic>(progress.Value.Value).faces.ToString());
-                        Rectangle[] eyes = JsonConvert.DeserializeObject<Rectangle[]>(JsonConvert.DeserializeObject<dynamic>(progress.Value.Value).eyes.ToString());
-                        if (face!=null && face.Count() > 0)
+
+                        Rectangle[] face = null;
+                        Rectangle[] eyes = null;
+                        IList<DetectedFace> marqueurs = null;
+                        try
+                        {
+                            face = JsonConvert.DeserializeObject<Rectangle[]>(JsonConvert.DeserializeObject<dynamic>(report.Value.Value).faces.ToString());
+
+                        }
+                        catch (Exception)
+                        {
+                        }
+                        try
+                        {
+                            eyes = JsonConvert.DeserializeObject<Rectangle[]>(JsonConvert.DeserializeObject<dynamic>(report.Value.Value).eyes.ToString());
+
+                        }
+                        catch (Exception)
+                        {
+                        }
+                        try
+                        {
+                            marqueurs = JsonConvert.DeserializeObject<IList<DetectedFace>>(JsonConvert.DeserializeObject<dynamic>(report.Value.Value).ToString());
+                        }
+                        catch (Exception)
+                        {
+                        }
+
+                        if (face != null && face.Count() > 0)
                         {
                             bitmap = DrawRectangleOnBmp(face, bitmap, Color.Red, 1);
 
@@ -122,10 +150,46 @@ namespace LieDetector
                                 bitmap = DrawRectangleOnBmp(eyes, bitmap, Color.Yellow, 2);
                                 bitmap = DrawRectangleOnBmp(eyes, bitmap, Color.Yellow, 2);
                             }
-                        } 
+                        }
+                        if (marqueurs != null)
+                        {
+                            foreach (var visage in marqueurs)
+                            {
+                                bitmap = DrawRectangleOnBmp(new Rectangle[]{
+                                    new Rectangle(visage.FaceRectangle.Left,visage.FaceRectangle.Top,visage.FaceRectangle.Width,visage.FaceRectangle.Height)
+                                }, bitmap, Color.Red, 1);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.EyebrowLeftInner.X, visage.FaceLandmarks.EyebrowLeftInner.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.EyebrowLeftOuter.X, visage.FaceLandmarks.EyebrowLeftOuter.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.EyebrowRightInner.X, visage.FaceLandmarks.EyebrowRightInner.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.EyebrowRightOuter.X, visage.FaceLandmarks.EyebrowRightOuter.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.EyeLeftBottom.X, visage.FaceLandmarks.EyeLeftBottom.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.EyeLeftInner.X, visage.FaceLandmarks.EyeLeftInner.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.EyeLeftOuter.X, visage.FaceLandmarks.EyeLeftOuter.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.EyeLeftTop.X, visage.FaceLandmarks.EyeLeftTop.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.EyeRightBottom.X, visage.FaceLandmarks.EyeRightBottom.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.EyeRightInner.X, visage.FaceLandmarks.EyeRightInner.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.EyeRightOuter.X, visage.FaceLandmarks.EyeRightOuter.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.EyeRightTop.X, visage.FaceLandmarks.EyeRightTop.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.MouthLeft.X, visage.FaceLandmarks.MouthLeft.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.MouthRight.X, visage.FaceLandmarks.MouthRight.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.NoseLeftAlarOutTip.X, visage.FaceLandmarks.NoseLeftAlarOutTip.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.NoseLeftAlarTop.X, visage.FaceLandmarks.NoseLeftAlarTop.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.NoseRightAlarOutTip.X, visage.FaceLandmarks.NoseRightAlarOutTip.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.NoseRightAlarTop.X, visage.FaceLandmarks.NoseRightAlarTop.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.NoseRootLeft.X, visage.FaceLandmarks.NoseRootLeft.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.NoseRootRight.X, visage.FaceLandmarks.NoseRootRight.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.NoseTip.X, visage.FaceLandmarks.NoseTip.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.PupilLeft.X, visage.FaceLandmarks.PupilLeft.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.PupilRight.X, visage.FaceLandmarks.PupilRight.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.UnderLipBottom.X, visage.FaceLandmarks.UnderLipBottom.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.UnderLipTop.X, visage.FaceLandmarks.UnderLipTop.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.UpperLipBottom.X, visage.FaceLandmarks.UpperLipBottom.Y, bitmap);
+                                bitmap = DrawPointOnBitmap(visage.FaceLandmarks.UpperLipTop.X, visage.FaceLandmarks.UpperLipTop.Y, bitmap);
+                            }
+                        }
                         pictureBox1.Source = ConverBitmapToBitmapImage(bitmap);
                     }
-                } 
+                }
 
             }
             catch (Exception ex)
@@ -135,6 +199,22 @@ namespace LieDetector
 
 
         }
+
+        private Bitmap DrawPointOnBitmap(double x, double y, Bitmap bitmap)
+        {
+            using (Graphics g = Graphics.FromImage(bitmap))
+            {
+                Pen p = new Pen(Color.Yellow, (float)1.0);
+
+                if (p != null)
+                {
+
+                    g.FillRectangle(p.Brush, (float)x, (float)y, 4, 4);
+                }
+            }
+            return bitmap;
+        }
+
         private void ButtonVideo_Click(object sender, RoutedEventArgs e)
         {
 
