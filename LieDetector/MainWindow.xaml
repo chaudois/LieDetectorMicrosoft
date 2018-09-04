@@ -14,6 +14,7 @@
         <Image x:Name="pictureBox1" HorizontalAlignment="Left" Height="468" Margin="10,105,0,0" VerticalAlignment="Top" Width="663"/>
         <Label x:Name="nomDuFichier" Content="" HorizontalAlignment="Left" Margin="579,10,0,0" VerticalAlignment="Top" Width="169" FontWeight="Bold" FontSize="20"/>
         <Label Name="labelAvancementFragmentation" Content="" HorizontalAlignment="Left" Margin="187,62,0,0" VerticalAlignment="Top" Height="29" Width="120"/>
+        <Image x:Name="pictureFace" HorizontalAlignment="Left" Height="250" Margin="678,105,0,0" VerticalAlignment="Top" Width="317"/>
 
 
 

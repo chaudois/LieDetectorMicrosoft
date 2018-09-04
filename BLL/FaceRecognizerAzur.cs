@@ -18,7 +18,7 @@ namespace BLL
     public class FaceRecognizerAzur : IFaceRecognizer
     {
         public bool busy { get; private set; }
-
+        private PictureDrawer PictureDrawer = new PictureDrawer();
         private const string baseUri = "https://westeurope.api.cognitive.microsoft.com/face/v1.0";
         private const string subscriptionKey = "96205c584c3e485f9598b0dc30d19d2c";
         private readonly IFaceClient faceClient = new FaceClient(
@@ -135,5 +135,37 @@ namespace BLL
             return memoryStream;
         }
 
+        public Bitmap GetFacePicture(Bitmap bitmap, string serializedModel)
+        {
+            IList<DetectedFace> marqueurs = JsonConvert.DeserializeObject<IList<DetectedFace>>(serializedModel);
+            if (marqueurs != null && marqueurs.Count() > 0)
+            {
+                var visage = marqueurs[0];
+                bitmap = PictureDrawer.DrawMarqueurs(visage.FaceLandmarks, bitmap);
+                bitmap = PictureDrawer.CutRectangleFromBitmap(bitmap,
+                    new Rectangle(visage.FaceRectangle.Left,
+                    visage.FaceRectangle.Top,
+                    visage.FaceRectangle.Width,
+                    visage.FaceRectangle.Height)
+                    );
+
+
+            }
+            return bitmap;
+        }
+
+        public Bitmap GetFullPicture(Bitmap bitmap, string serializedModel)
+        {
+            IList<DetectedFace> marqueurs = JsonConvert.DeserializeObject<IList<DetectedFace>>(serializedModel);
+            if (marqueurs != null && marqueurs.Count() > 0)
+            {
+                var visage = marqueurs[0];
+                bitmap = PictureDrawer.DrawRectangleOnBmp(new Rectangle[]{
+                                    new Rectangle(visage.FaceRectangle.Left,visage.FaceRectangle.Top,visage.FaceRectangle.Width,visage.FaceRectangle.Height)
+                                }, bitmap, Color.Red, 1);
+                bitmap = PictureDrawer.DrawMarqueurs(visage.FaceLandmarks, bitmap);
+            }
+            return bitmap;
+        }
     }
 }

@@ -150,6 +150,15 @@ namespace BLL
             }
         }
 
+        public Bitmap GetFacePicture(Bitmap bitmap, string serializedModel)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Bitmap GetFullPicture(Bitmap bitmap, string serializedModel)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 
