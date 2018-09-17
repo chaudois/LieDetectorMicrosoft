@@ -1,6 +1,7 @@
 ﻿using Accord.Video.FFMPEG;
 using Emgu.CV;
 using Emgu.CV.Structure;
+using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -156,6 +157,21 @@ namespace BLL
         }
 
         public Bitmap GetFullPicture(Bitmap bitmap, string serializedModel)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AnalyzeVideo(string videoPath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IList<DetectedFace> popAzureResult()
+        {
+            throw new NotImplementedException();
+        }
+
+        public KeyValuePair<int, string> popFaceRecoResult()
         {
             throw new NotImplementedException();
         }

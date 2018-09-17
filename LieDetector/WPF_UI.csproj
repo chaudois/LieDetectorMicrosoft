@@ -36,7 +36,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>500734715-612x612.ico</ApplicationIcon>
+    <ApplicationIcon>500734715-612x612.ico
+    </ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Accord, Version=3.8.0.0, Culture=neutral, PublicKeyToken=fa1a88e29555ccf7, processorArchitecture=MSIL">
@@ -155,7 +156,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
+    <ItemGroup>
     <Resource Include="500734715-612x612.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -172,12 +173,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Ressources\Images\trash.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="License-LGPL.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Image1.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Ressources\Images\folder.png" />

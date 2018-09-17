@@ -15,6 +15,11 @@
         <Label x:Name="nomDuFichier" Content="" HorizontalAlignment="Left" Margin="579,10,0,0" VerticalAlignment="Top" Width="169" FontWeight="Bold" FontSize="20"/>
         <Label Name="labelAvancementFragmentation" Content="" HorizontalAlignment="Left" Margin="187,62,0,0" VerticalAlignment="Top" Height="29" Width="120"/>
         <Image x:Name="pictureFace" HorizontalAlignment="Left" Height="250" Margin="678,105,0,0" VerticalAlignment="Top" Width="317"/>
+        <Label x:Name="tempsDeTraitement" Content="" HorizontalAlignment="Left" Margin="678,397,0,0" VerticalAlignment="Top" Width="306"/>
+        <CheckBox x:Name="checkBoxWatchFaceMarks" Content="afficher les marqueurs" HorizontalAlignment="Left" Margin="678,86,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="PauseButton"  HorizontalAlignment="Left" Margin="187,18,0,0" VerticalAlignment="Top" Width="34" Height="30" Click="PauseButton_Click" IsEnabled="False">
+            <Image x:Name="imagePause" Source="Ressources/Images/play.png"/>
+        </Button>
 
 
 

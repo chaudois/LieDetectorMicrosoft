@@ -15,12 +15,13 @@ namespace BLL
     {
         public Bitmap DrawRectangleOnBmp(Rectangle[] faces, Bitmap picture, Color couleur, int rectangleAmount)
         {
+            Bitmap result = new Bitmap(picture);
             for (int i = 0; i < rectangleAmount; i++)
             {
                 if (faces.Length - 1 >= i)
                 {
 
-                    using (Graphics g = Graphics.FromImage(picture))
+                    using (Graphics g = Graphics.FromImage(result))
                     {
                         Pen p = new Pen(couleur, (float)4.0);
 
@@ -45,42 +46,44 @@ namespace BLL
                 }
 
             }
-            return picture;
+            return result;
         }
         public Bitmap DrawMarqueurs(FaceLandmarks faceLandmarks, Bitmap bitmap)
         {
-            bitmap = DrawPointOnBitmap(faceLandmarks.EyebrowLeftInner.X, faceLandmarks.EyebrowLeftInner.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.EyebrowLeftOuter.X, faceLandmarks.EyebrowLeftOuter.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.EyebrowRightInner.X, faceLandmarks.EyebrowRightInner.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.EyebrowRightOuter.X, faceLandmarks.EyebrowRightOuter.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.EyeLeftBottom.X, faceLandmarks.EyeLeftBottom.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.EyeLeftInner.X, faceLandmarks.EyeLeftInner.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.EyeLeftOuter.X, faceLandmarks.EyeLeftOuter.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.EyeLeftTop.X, faceLandmarks.EyeLeftTop.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.EyeRightBottom.X, faceLandmarks.EyeRightBottom.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.EyeRightInner.X, faceLandmarks.EyeRightInner.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.EyeRightOuter.X, faceLandmarks.EyeRightOuter.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.EyeRightTop.X, faceLandmarks.EyeRightTop.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.MouthLeft.X, faceLandmarks.MouthLeft.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.MouthRight.X, faceLandmarks.MouthRight.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.NoseLeftAlarOutTip.X, faceLandmarks.NoseLeftAlarOutTip.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.NoseLeftAlarTop.X, faceLandmarks.NoseLeftAlarTop.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.NoseRightAlarOutTip.X, faceLandmarks.NoseRightAlarOutTip.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.NoseRightAlarTop.X, faceLandmarks.NoseRightAlarTop.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.NoseRootLeft.X, faceLandmarks.NoseRootLeft.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.NoseRootRight.X, faceLandmarks.NoseRootRight.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.NoseTip.X, faceLandmarks.NoseTip.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.PupilLeft.X, faceLandmarks.PupilLeft.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.PupilRight.X, faceLandmarks.PupilRight.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.UnderLipBottom.X, faceLandmarks.UnderLipBottom.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.UnderLipTop.X, faceLandmarks.UnderLipTop.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.UpperLipBottom.X, faceLandmarks.UpperLipBottom.Y, bitmap);
-            bitmap = DrawPointOnBitmap(faceLandmarks.UpperLipTop.X, faceLandmarks.UpperLipTop.Y, bitmap);
-            return bitmap;
+            Bitmap result = new Bitmap(bitmap);
+            result = DrawPointOnBitmap(faceLandmarks.EyebrowLeftInner.X, faceLandmarks.EyebrowLeftInner.Y, result);
+            result = DrawPointOnBitmap(faceLandmarks.EyebrowLeftOuter.X, faceLandmarks.EyebrowLeftOuter.Y, result);
+            result = DrawPointOnBitmap(faceLandmarks.EyebrowRightInner.X, faceLandmarks.EyebrowRightInner.Y, result);
+            result = DrawPointOnBitmap(faceLandmarks.EyebrowRightOuter.X, faceLandmarks.EyebrowRightOuter.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.EyeLeftBottom.X, faceLandmarks.EyeLeftBottom.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.EyeLeftInner.X, faceLandmarks.EyeLeftInner.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.EyeLeftOuter.X, faceLandmarks.EyeLeftOuter.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.EyeLeftTop.X, faceLandmarks.EyeLeftTop.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.EyeRightBottom.X, faceLandmarks.EyeRightBottom.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.EyeRightInner.X, faceLandmarks.EyeRightInner.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.EyeRightOuter.X, faceLandmarks.EyeRightOuter.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.EyeRightTop.X, faceLandmarks.EyeRightTop.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.MouthLeft.X, faceLandmarks.MouthLeft.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.MouthRight.X, faceLandmarks.MouthRight.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.NoseLeftAlarOutTip.X, faceLandmarks.NoseLeftAlarOutTip.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.NoseLeftAlarTop.X, faceLandmarks.NoseLeftAlarTop.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.NoseRightAlarOutTip.X, faceLandmarks.NoseRightAlarOutTip.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.NoseRightAlarTop.X, faceLandmarks.NoseRightAlarTop.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.NoseRootLeft.X, faceLandmarks.NoseRootLeft.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.NoseRootRight.X, faceLandmarks.NoseRootRight.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.NoseTip.X, faceLandmarks.NoseTip.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.PupilLeft.X, faceLandmarks.PupilLeft.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.PupilRight.X, faceLandmarks.PupilRight.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.UnderLipBottom.X, faceLandmarks.UnderLipBottom.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.UnderLipTop.X, faceLandmarks.UnderLipTop.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.UpperLipBottom.X, faceLandmarks.UpperLipBottom.Y, result);
+            result= DrawPointOnBitmap(faceLandmarks.UpperLipTop.X, faceLandmarks.UpperLipTop.Y, result);
+            return result;
         }
         public Bitmap DrawPointOnBitmap(double x, double y, Bitmap bitmap)
         {
-            using (Graphics g = Graphics.FromImage(bitmap))
+            Bitmap result = new Bitmap(bitmap);
+            using (Graphics g = Graphics.FromImage(result))
             {
                 Pen p = new Pen(Color.Yellow, (float)1.0);
 
@@ -90,7 +93,7 @@ namespace BLL
                     g.FillRectangle(p.Brush, (float)x, (float)y, 3, 3);
                 }
             }
-            return bitmap;
+            return result;
         }
         public Bitmap CutRectangleFromBitmap(Bitmap bitmap, Rectangle rectangle)
         {

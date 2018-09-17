@@ -12,68 +12,57 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Drawing.Imaging;
+using DAL;
 
 namespace BLL
 {
     public class FaceRecognizerAzur : IFaceRecognizer
     {
         public bool busy { get; private set; }
-        private PictureDrawer PictureDrawer = new PictureDrawer();
+        private PictureDrawer pictureDrawer = new PictureDrawer();
         private const string baseUri = "https://westeurope.api.cognitive.microsoft.com/face/v1.0";
         private const string subscriptionKey = "96205c584c3e485f9598b0dc30d19d2c";
         private readonly IFaceClient faceClient = new FaceClient(
             new Uri(baseUri),
             new ApiKeyServiceClientCredentials(subscriptionKey),
             new System.Net.Http.DelegatingHandler[] { });
-        public SortedList<int, string> orderedNotification { get; private set; }
-
         public string progress { get; private set; }
-
+        int poped = 0;
+        private ISQLMananger _SQLMananger = new SQLMananger();
+        string videoName = null;
         public FaceRecognizerAzur()
         {
             busy = false;
-            orderedNotification = new SortedList<int, string>();
-        }
-        public KeyValuePair<int, string>? GetReport()
-        {
 
-            if (orderedNotification == null || orderedNotification.Count() == 0) return null;
-            KeyValuePair<int, string> result = new KeyValuePair<int, string>(orderedNotification.ElementAt(0).Key, orderedNotification.ElementAt(0).Value);
-            orderedNotification.RemoveAt(0);
-            return result;
+
         }
 
-        public void AnalyzeVideo(string videoPath, string saveDirectory = null)
+
+        public void AnalyzeVideo(string videoPath)
         {
             if (busy) return;
             busy = true;
             Task.Run(async () =>
             {
-
-                if (saveDirectory == null)
-                {
-                    saveDirectory = Assembly.GetEntryAssembly().Location.Remove(Assembly.GetEntryAssembly().Location.LastIndexOf('\\'));
-                }
-                string videoName = videoPath.Split('\\').ToList()[videoPath.Split('\\').ToList().Count() - 2];
+                videoName = videoPath.Split('\\').ToList()[videoPath.Split('\\').ToList().Count() - 2];
                 using (VideoFileReader reader = new VideoFileReader())
                 {
                     reader.Open(videoPath);
                     try
                     {
 
+                        int frameNumber = 0;
                         Bitmap videoFrame = reader.ReadVideoFrame();
-
-
-                        int frameNumber = 1;
                         while (videoFrame != null)
                         {
-                            string notification = "";
                             progress = frameNumber + "/" + reader.FrameCount;
 
-
-                            var faces = await UploadAndDetectFaces(videoFrame);
-                            notification = JsonConvert.SerializeObject(faces);
-                            orderedNotification.Add(frameNumber, notification);
+                            if (_SQLMananger.getFrame(videoName, frameNumber) == null )
+                            {
+                                var faces = await UploadAndDetectFaces(videoFrame);
+                                string resultAzure = JsonConvert.SerializeObject(faces);
+                                _SQLMananger.saveFrame(videoName, frameNumber, resultAzure);
+                            }
                             videoFrame = reader.ReadVideoFrame();
                             frameNumber++;
                         }
@@ -88,6 +77,8 @@ namespace BLL
                 busy = false;
             });
         }
+
+
 
         // Uploads the image file and calls DetectWithStreamAsync.
         private async Task<IList<DetectedFace>> UploadAndDetectFaces(Bitmap image)
@@ -138,20 +129,19 @@ namespace BLL
         public Bitmap GetFacePicture(Bitmap bitmap, string serializedModel)
         {
             IList<DetectedFace> marqueurs = JsonConvert.DeserializeObject<IList<DetectedFace>>(serializedModel);
+            Bitmap result = null;
             if (marqueurs != null && marqueurs.Count() > 0)
             {
                 var visage = marqueurs[0];
-                bitmap = PictureDrawer.DrawMarqueurs(visage.FaceLandmarks, bitmap);
-                bitmap = PictureDrawer.CutRectangleFromBitmap(bitmap,
+                result = pictureDrawer.DrawMarqueurs(visage.FaceLandmarks, bitmap);
+                result = pictureDrawer.CutRectangleFromBitmap(result,
                     new Rectangle(visage.FaceRectangle.Left,
                     visage.FaceRectangle.Top,
                     visage.FaceRectangle.Width,
                     visage.FaceRectangle.Height)
                     );
-
-
             }
-            return bitmap;
+            return result;
         }
 
         public Bitmap GetFullPicture(Bitmap bitmap, string serializedModel)
@@ -160,12 +150,24 @@ namespace BLL
             if (marqueurs != null && marqueurs.Count() > 0)
             {
                 var visage = marqueurs[0];
-                bitmap = PictureDrawer.DrawRectangleOnBmp(new Rectangle[]{
+                bitmap = pictureDrawer.DrawRectangleOnBmp(new Rectangle[]{
                                     new Rectangle(visage.FaceRectangle.Left,visage.FaceRectangle.Top,visage.FaceRectangle.Width,visage.FaceRectangle.Height)
                                 }, bitmap, Color.Red, 1);
-                bitmap = PictureDrawer.DrawMarqueurs(visage.FaceLandmarks, bitmap);
+                //bitmap = pictureDrawer.DrawMarqueurs(visage.FaceLandmarks, bitmap);
             }
             return bitmap;
+        }
+
+        public KeyValuePair<int, string> popFaceRecoResult()
+        {
+            string result = _SQLMananger.getFrame(videoName, poped);
+            if(result!=null && result != "")
+            {
+                var retour = new KeyValuePair<int, string>(poped,  result);
+                poped++;
+                return retour;
+            }
+            return new KeyValuePair<int, string>(poped,null);
         }
     }
 }
